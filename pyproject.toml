@@ -1,0 +1,26 @@
+[project]
+name = "where-to-live"
+version = "0.1.0"
+description = "Find walkable neighborhoods for a two-location lifestyle after DC"
+requires-python = ">=3.11"
+dependencies = [
+    "geopandas>=1.0",
+    "shapely>=2.0",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "requests>=2.31",
+    "overpy>=0.7",
+    "osmnx>=1.9",
+    "folium>=0.17",
+    "tqdm>=4.66",
+    "python-dotenv>=1.0",
+    "pyarrow>=15.0",        # fast parquet I/O for caching
+    "scipy>=1.12",          # normalization helpers
+    "openpyxl>=3.1",        # read Zillow / HUD Excel files
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel>=6.0",
+    "jupyter>=1.0",
+]

@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# Downloaded / generated data — large files, reproducible
+data/raw/
+data/processed/
+outputs/
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!outputs/maps/.gitkeep
+
+# uv
+uv.lock

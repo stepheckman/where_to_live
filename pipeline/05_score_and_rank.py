@@ -1,0 +1,187 @@
+"""
+Step 5: Composite Scoring and Ranking
+---------------------------------------
+Normalizes all signals to [0, 1], applies weights from config.py,
+and produces the final ranked candidate lists.
+
+For north (buying): home value (Zillow ZHVI) is scored inversely —
+  lower value → higher score, since affordability matters.
+For south (renting): FMR 2BR rent is scored inversely for the same reason.
+
+If Walk Score is missing (no API key), weights are redistributed to OSM signals.
+
+Outputs
+-------
+outputs/north_candidates.csv
+outputs/south_candidates.csv
+"""
+
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import (
+    DATA_PROCESSED,
+    OUTPUTS,
+    TOP_N,
+    W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY,
+    W_HOME_VALUE, W_RENT,
+    CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY,
+    MIN_WALK_SCORE, MIN_BIKE_SCORE,
+)
+
+
+def normalize_col(series: pd.Series, cap: float = None, invert: bool = False) -> pd.Series:
+    """
+    Normalize a series to [0, 1].
+    - cap: values above this are treated as cap (soft ceiling)
+    - invert: lower raw values → higher normalized score (for cost signals)
+    """
+    s = series.copy().astype(float)
+    if cap is not None:
+        s = s.clip(upper=cap)
+
+    s_min = s.min()
+    s_max = s.max()
+
+    if s_max == s_min:
+        return pd.Series(np.where(s.notna(), 0.5, np.nan), index=series.index)
+
+    normalized = (s - s_min) / (s_max - s_min)
+    if invert:
+        normalized = 1.0 - normalized
+
+    # Leave NaN as NaN so we can handle missing signals explicitly
+    normalized[series.isna()] = np.nan
+    return normalized
+
+
+def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Compute composite score for a region's candidate DataFrame."""
+    df = df.copy()
+
+    has_walkscore = df["walk_score"].notna().any() if "walk_score" in df.columns else False
+
+    # Normalize all input signals
+    df["n_walk"]       = normalize_col(df.get("walk_score"), cap=100)
+    df["n_bike"]       = normalize_col(df.get("bike_score"), cap=100)
+    df["n_grocery"]    = normalize_col(df.get("grocery_count"), cap=CAP_GROCERY)
+    df["n_cafe"]       = normalize_col(df.get("cafe_count"), cap=CAP_CAFE)
+    df["n_restaurant"] = normalize_col(df.get("restaurant_count"), cap=CAP_RESTAURANT)
+    df["n_pharmacy"]   = normalize_col(df.get("pharmacy_count"), cap=CAP_PHARMACY)
+
+    if region == "north" and "zhvi_latest" in df.columns:
+        df["n_affordability"] = normalize_col(df["zhvi_latest"], invert=True)
+        affordability_weight = W_HOME_VALUE
+    elif region == "south" and "fmr_2br" in df.columns:
+        df["n_affordability"] = normalize_col(df["fmr_2br"], invert=True)
+        affordability_weight = W_RENT
+    else:
+        df["n_affordability"] = np.nan
+        affordability_weight = 0.0
+
+    # If Walk Score is missing, redistribute its weight to OSM signals
+    if not has_walkscore:
+        w_walk = 0.0
+        w_bike = 0.0
+        # Redistribute 0.45 (walk + bike) proportionally to OSM signals
+        total_osm_base = W_GROCERY + W_CAFE + W_RESTAURANT + W_PHARMACY
+        scale = (W_WALK + W_BIKE + total_osm_base) / total_osm_base
+        w_grocery    = W_GROCERY    * scale
+        w_cafe       = W_CAFE       * scale
+        w_restaurant = W_RESTAURANT * scale
+        w_pharmacy   = W_PHARMACY   * scale
+    else:
+        w_walk       = W_WALK
+        w_bike       = W_BIKE
+        w_grocery    = W_GROCERY
+        w_cafe       = W_CAFE
+        w_restaurant = W_RESTAURANT
+        w_pharmacy   = W_PHARMACY
+
+    # Affordability: reduce from other weights proportionally
+    if affordability_weight > 0 and df["n_affordability"].notna().any():
+        scale_factor = 1.0 - affordability_weight
+        w_walk       *= scale_factor
+        w_bike       *= scale_factor
+        w_grocery    *= scale_factor
+        w_cafe       *= scale_factor
+        w_restaurant *= scale_factor
+        w_pharmacy   *= scale_factor
+    else:
+        affordability_weight = 0.0
+
+    def safe_fill(col: pd.Series, default: float = 0.5) -> pd.Series:
+        """Fill NaN with a neutral value for scoring (doesn't penalize missing)."""
+        return col.fillna(default)
+
+    df["composite_score"] = (
+        w_walk       * safe_fill(df["n_walk"])           +
+        w_bike       * safe_fill(df["n_bike"])           +
+        w_grocery    * safe_fill(df["n_grocery"])        +
+        w_cafe       * safe_fill(df["n_cafe"])           +
+        w_restaurant * safe_fill(df["n_restaurant"])     +
+        w_pharmacy   * safe_fill(df["n_pharmacy"])       +
+        affordability_weight * safe_fill(df["n_affordability"])
+    ) * 100  # scale to 0–100
+
+    return df
+
+
+def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Select and rename columns for the final output CSV."""
+    cols = {
+        "ZCTA5CE20": "zcta",
+        "centroid_lat": "lat",
+        "centroid_lon": "lon",
+        "walk_score": "walk_score",
+        "bike_score": "bike_score",
+        "transit_score": "transit_score",
+        "grocery_count": "grocery_count",
+        "cafe_count": "cafe_count",
+        "restaurant_count": "restaurant_count",
+        "pharmacy_count": "pharmacy_count",
+        "nearest_airport": "nearest_airport",
+        "airport_drive_min_approx": "airport_drive_min",
+        "composite_score": "composite_score",
+    }
+    if region == "north":
+        cols["zhvi_latest"] = "median_home_value"
+    elif region == "south":
+        cols["fmr_2br"] = "fmr_2br_rent"
+
+    present = {k: v for k, v in cols.items() if k in df.columns}
+    out = df.rename(columns=present)[[v for v in present.values()]]
+    return out.sort_values("composite_score", ascending=False).head(TOP_N)
+
+
+def run() -> None:
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
+
+    for region in ("north", "south"):
+        in_path = DATA_PROCESSED / f"{region}_amenities.parquet"
+        if not in_path.exists():
+            raise FileNotFoundError(f"Run pipeline/04_osm_amenities.py first ({in_path})")
+
+        df = pd.read_parquet(in_path)
+        print(f"\n--- {region.upper()} ({len(df):,} candidates after all filters) ---")
+
+        scored = compute_scores(df, region)
+        top = build_output_row(scored, region)
+
+        out_path = OUTPUTS / f"{region}_candidates.csv"
+        top.to_csv(out_path, index=False)
+
+        print(f"Top {len(top)} {region} candidates saved to {out_path}")
+        print("\n" + top[["zcta", "composite_score"] +
+              (["walk_score"] if "walk_score" in top.columns else []) +
+              (["median_home_value"] if "median_home_value" in top.columns else []) +
+              (["fmr_2br_rent"] if "fmr_2br_rent" in top.columns else [])
+              ].head(10).to_string(index=False))
+
+
+if __name__ == "__main__":
+    run()
