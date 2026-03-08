@@ -38,11 +38,18 @@ from config import (
     SOUTH_LAT_MIN, SOUTH_LAT_MAX,
 )
 
-# FAA NPIAS airport data (public CSV via OpenData)
+# OurAirports data — stable GitHub-hosted CSV with type + scheduled_service columns.
+# FAA ArcGIS/OpenData URLs (4d6c33b082f04b77ae3b5f56d5f04c46) return 400 as of 2026.
 FAA_AIRPORTS_URL = (
-    "https://opendata.arcgis.com/datasets/"
-    "4d6c33b082f04b77ae3b5f56d5f04c46_0.csv"
+    "https://davidmegginson.github.io/ourairports-data/airports.csv"
 )
+
+# OurAirports type → hub label mapping (approximates FAA hub classification)
+OURAIRPORTS_HUB_MAP = {
+    "large_airport": "Large",
+    "medium_airport": "Medium",
+    "small_airport": "Small",
+}
 
 # Drive speed assumption for isochrone approximation (mph)
 DRIVE_SPEED_MPH = 40
@@ -63,42 +70,28 @@ def fetch_faa_airports() -> gpd.GeoDataFrame:
             df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs="EPSG:4326"
         )
 
-    print("Downloading FAA airport data…")
+    print("Downloading OurAirports airport data…")
     resp = requests.get(FAA_AIRPORTS_URL, timeout=60)
     resp.raise_for_status()
 
-    # The OpenData CSV uses various column name conventions; normalise.
     df = pd.read_csv(io.StringIO(resp.text))
-
-    # Normalise column names to lowercase
     df.columns = [c.strip().lower() for c in df.columns]
 
-    # Try to find lat/lon columns
-    lat_col = next((c for c in df.columns if "lat" in c), None)
-    lon_col = next((c for c in df.columns if "lon" in c), None)
-    hub_col = next((c for c in df.columns if "hub" in c), None)
-    name_col = next((c for c in df.columns if "name" in c), None)
-    iata_col = next((c for c in df.columns if "iata" in c or "arpt_id" in c), None)
-    state_col = next((c for c in df.columns if "state" in c), None)
-
-    if lat_col is None or lon_col is None:
-        raise ValueError(f"Cannot find lat/lon columns. Available: {list(df.columns)}")
-
+    # OurAirports columns: latitude_deg, longitude_deg, type, name, iata_code, iso_region
     df = df.rename(columns={
-        lat_col: "lat",
-        lon_col: "lon",
-        hub_col: "hub_type" if hub_col else "hub_type",
-        name_col: "airport_name" if name_col else "airport_name",
-        iata_col: "iata" if iata_col else "iata",
-        state_col: "state" if state_col else "state",
+        "latitude_deg": "lat",
+        "longitude_deg": "lon",
+        "name": "airport_name",
+        "iata_code": "iata",
+        "iso_region": "state",
     })
 
-    if "hub_type" not in df.columns:
-        df["hub_type"] = "Small"  # fallback
-
-    # Filter to commercial service hubs
-    df["hub_type"] = df["hub_type"].fillna("").str.strip()
-    commercial = df[df["hub_type"].isin(AIRPORT_HUB_TYPES)].copy()
+    # Map OurAirports type → hub label; filter to US scheduled commercial service
+    if "iso_country" in df.columns:
+        df = df[df["iso_country"] == "US"].copy()
+    df["hub_type"] = df["type"].map(OURAIRPORTS_HUB_MAP).fillna("")
+    sched = df["scheduled_service"] if "scheduled_service" in df.columns else "yes"
+    commercial = df[df["hub_type"].isin(AIRPORT_HUB_TYPES) & (sched == "yes")].copy()
 
     # Drop airports missing coordinates
     commercial = commercial.dropna(subset=["lat", "lon"])
