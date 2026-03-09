@@ -81,6 +81,19 @@ if north_raw is None or south_raw is None:
     )
     st.stop()
 
+# Data availability callout
+_missing = []
+if north_raw["walk_score"].isna().all():
+    _missing.append("**Walk/Bike scores** (set `WALKSCORE_API_KEY` and re-run step 3)")
+if "fmr_2br" not in south_raw.columns:
+    _missing.append("**South rent data** (re-run step 4 to fetch HUD FMR)")
+if _missing:
+    st.info(
+        "Some data is missing — affordability/walkability weights are auto-zeroed "
+        "for those signals:\n- " + "\n- ".join(_missing),
+        icon="ℹ️",
+    )
+
 # ---------------------------------------------------------------------------
 # Sidebar controls
 # ---------------------------------------------------------------------------
