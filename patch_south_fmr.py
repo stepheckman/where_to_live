@@ -6,6 +6,7 @@ Safe to re-run — caches both downloads locally.
 """
 import io
 import sys
+import zipfile
 from pathlib import Path
 
 import pandas as pd
@@ -22,7 +23,7 @@ DATA_RAW = ROOT / "data" / "raw"
 DATA_PROCESSED = ROOT / "data" / "processed"
 
 HUD_FMR_URL = (
-    "https://www.huduser.gov/portal/datasets/fmr/fmr2024/FY2024_4050_FMR.xlsx"
+    "https://www.huduser.gov/portal/datasets/fmr/fmr2024/FMR2024_final_revised.xlsx"
 )
 CENSUS_CROSSWALK_URL = (
     "https://www2.census.gov/geo/docs/maps-data/data/rel2020/"
@@ -36,11 +37,28 @@ def fetch_hud_fmr() -> pd.DataFrame:
         logger.debug("HUD FMR: using cache")
         return pd.read_parquet(cache)
 
-    logger.info("Downloading HUD FMR…")
-    resp = requests.get(HUD_FMR_URL, timeout=60)
+    logger.info(f"Downloading HUD FMR from {HUD_FMR_URL} …")
+    # timeout=(connect_secs, read_secs) — read timeout fires if no new bytes arrive
+    resp = requests.get(HUD_FMR_URL, timeout=(10, 30), stream=True)
     resp.raise_for_status()
-    df = pd.read_excel(io.BytesIO(resp.content))
-    df.columns = [c.strip().lower() for c in df.columns]
+    buf = io.BytesIO()
+    total = int(resp.headers.get("content-length", 0))
+    received = 0
+    for chunk in resp.iter_content(chunk_size=1 << 16):
+        buf.write(chunk)
+        received += len(chunk)
+    logger.debug(f"Downloaded {received:,} bytes")
+    buf.seek(0)
+    # openpyxl crashes on this HUD file because docProps/core.xml contains a
+    # malformed datetime ("2024- 1-24T19: 8: 0Z"). Strip that entry from the zip
+    # in-memory — openpyxl skips properties parsing when the file is absent.
+    clean = io.BytesIO()
+    with zipfile.ZipFile(buf) as zin, zipfile.ZipFile(clean, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            if item.filename != "docProps/core.xml":
+                zout.writestr(item, zin.read(item.filename))
+    clean.seek(0)
+    df = pd.read_excel(clean)
     logger.debug(f"HUD FMR columns: {list(df.columns)}")
 
     fips_col = next((c for c in df.columns if "fips" in c), None)
@@ -92,8 +110,8 @@ def patch_south():
     south = south.merge(
         crosswalk.rename(columns={"zcta": "zcta_str"}),
         on="zcta_str", how="left"
-    ).merge(hud, on="county_fips", how="left")
-    south = south.drop(columns=["zcta_str", "county_fips"], errors="ignore")
+    ).merge(hud, left_on="county_fips", right_on="fips_county", how="left")
+    south = south.drop(columns=["zcta_str", "county_fips", "fips_county"], errors="ignore")
 
     matched = south["fmr_2br"].notna().sum()
     logger.info(f"fmr_2br matched for {matched:,}/{len(south):,} ZCTAs")

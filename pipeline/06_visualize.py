@@ -16,12 +16,46 @@ from pathlib import Path
 
 import folium
 import pandas as pd
+import requests
 from folium.plugins import MarkerCluster
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from loguru import logger
 from config import OUTPUTS, MAPS
+
+
+def reverse_geocode_city(lat: float, lon: float) -> str:
+    """Return 'City, State' for a lat/lon using OSM Nominatim (free, no key)."""
+    try:
+        resp = requests.get(
+            "https://nominatim.openstreetmap.org/reverse",
+            params={"lat": lat, "lon": lon, "format": "json"},
+            headers={"User-Agent": "where-to-live-pipeline/1.0"},
+            timeout=10,
+        )
+        data = resp.json()
+        addr = data.get("address", {})
+        city = (
+            addr.get("city")
+            or addr.get("town")
+            or addr.get("village")
+            or addr.get("county", "")
+        )
+        state = addr.get("state", "")
+        return f"{city}, {state}".strip(", ")
+    except Exception:
+        return ""
+
+
+def add_city_column(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a 'city' column via reverse geocoding if not already present."""
+    if "city" in df.columns:
+        return df
+    logger.info("Reverse geocoding city names (this may take a moment)…")
+    df = df.copy()
+    df["city"] = [reverse_geocode_city(r.lat, r.lon) for r in df.itertuples()]
+    return df
 
 
 def score_to_color(score: float) -> str:
@@ -72,9 +106,13 @@ def build_popup(row: pd.Series, region: str) -> str:
         if pd.notna(airport_min) else str(airport_info)
     )
 
+    city = row.get("city", "") or ""
+    city_line = f'<div style="font-size:13px; color:#555; margin-bottom:4px;">{city}</div>' if city else ""
+
     return f"""
     <div style="font-family: sans-serif; width: 280px;">
-      <h4 style="margin:0 0 6px 0;">ZCTA {row['zcta']}</h4>
+      <h4 style="margin:0 0 2px 0;">ZCTA {row['zcta']}</h4>
+      {city_line}
       <table style="border-collapse: collapse; width: 100%;">
         <tr style="background:#f5f5f5;">
           <td colspan="2" style="padding:4px 6px; font-weight:bold; font-size:15px;">
@@ -133,7 +171,7 @@ def make_map(df: pd.DataFrame, region: str, center_lat: float, center_lon: float
             fill_color=color,
             fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"ZCTA {row['zcta']} — Score: {row['composite_score']:.1f}",
+            tooltip=f"{row.get('city') or ('ZCTA ' + str(row['zcta']))} — Score: {row['composite_score']:.1f}",
         ).add_to(m)
 
     return m
@@ -148,6 +186,7 @@ def run() -> None:
             raise FileNotFoundError(f"Run pipeline/05_score_and_rank.py first ({in_path})")
 
         df = pd.read_csv(in_path)
+        df = add_city_column(df)
         logger.info(f"{region.upper()}: {len(df)} candidates")
 
         center_lat = df["lat"].mean()
@@ -162,6 +201,8 @@ def run() -> None:
     logger.info("Building combined map…")
     north_df = pd.read_csv(OUTPUTS / "north_candidates.csv")
     south_df = pd.read_csv(OUTPUTS / "south_candidates.csv")
+    north_df = add_city_column(north_df)
+    south_df = add_city_column(south_df)
     north_df["region"] = "north"
     south_df["region"] = "south"
     combined = pd.concat([north_df, south_df], ignore_index=True)
@@ -185,7 +226,7 @@ def run() -> None:
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=color, fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"[N] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+            tooltip=f"[N] {row.get('city') or ('ZCTA ' + str(row['zcta']))} — {row['composite_score']:.1f}",
         ).add_to(north_group)
 
     for _, row in south_df.iterrows():
@@ -196,7 +237,7 @@ def run() -> None:
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=color, fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"[S] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+            tooltip=f"[S] {row.get('city') or ('ZCTA ' + str(row['zcta']))} — {row['composite_score']:.1f}",
         ).add_to(south_group)
 
     north_group.add_to(m_combined)

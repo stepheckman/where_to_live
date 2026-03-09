@@ -323,6 +323,18 @@ def _build_popup(row: pd.Series, region: str) -> str:
     </div>"""
 
 
+_LEGEND_HTML = """
+<div style="position:fixed;bottom:30px;left:30px;z-index:1000;
+            background:white;padding:10px 14px;border-radius:6px;
+            border:1px solid #ccc;font-family:sans-serif;font-size:13px;">
+  <b>Score</b><br>
+  <span style="color:#2ecc71;">&#9679;</span> ≥75 Excellent<br>
+  <span style="color:#f1c40f;">&#9679;</span> 60–74 Good<br>
+  <span style="color:#e67e22;">&#9679;</span> 45–59 Fair<br>
+  <span style="color:#e74c3c;">&#9679;</span> &lt;45 Poor
+</div>"""
+
+
 def _render_map_html(df: pd.DataFrame, region: str) -> str:
     center_lat = df["lat"].mean()
     center_lon = df["lon"].mean()
@@ -331,18 +343,7 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
         zoom_start=6,
         tiles="CartoDB positron",
     )
-    m.get_root().html.add_child(
-        folium.Element("""
-        <div style="position:fixed;bottom:30px;left:30px;z-index:1000;
-                    background:white;padding:10px 14px;border-radius:6px;
-                    border:1px solid #ccc;font-family:sans-serif;font-size:13px;">
-          <b>Score</b><br>
-          <span style="color:#2ecc71;">&#9679;</span> ≥75 Excellent<br>
-          <span style="color:#f1c40f;">&#9679;</span> 60–74 Good<br>
-          <span style="color:#e67e22;">&#9679;</span> 45–59 Fair<br>
-          <span style="color:#e74c3c;">&#9679;</span> &lt;45 Poor
-        </div>""")
-    )
+    m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
     for _, row in df.iterrows():
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
@@ -355,6 +356,43 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
             popup=folium.Popup(_build_popup(row, region), max_width=300),
             tooltip=f"ZCTA {row['zcta']} — {row['composite_score']:.1f}",
         ).add_to(m)
+    return m._repr_html_()
+
+
+def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) -> str:
+    all_lats = list(north_df["lat"]) + list(south_df["lat"])
+    all_lons = list(north_df["lon"]) + list(south_df["lon"])
+    m = folium.Map(
+        location=[sum(all_lats) / len(all_lats), sum(all_lons) / len(all_lons)],
+        zoom_start=4,
+        tiles="CartoDB positron",
+    )
+    m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
+
+    north_group = folium.FeatureGroup(name="North — buy", show=True)
+    south_group = folium.FeatureGroup(name="South — rent", show=True)
+
+    for _, row in north_df.iterrows():
+        folium.CircleMarker(
+            location=[row["lat"], row["lon"]],
+            radius=9, color="white", weight=1.5,
+            fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
+            popup=folium.Popup(_build_popup(row, "north"), max_width=300),
+            tooltip=f"[N] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+        ).add_to(north_group)
+
+    for _, row in south_df.iterrows():
+        folium.CircleMarker(
+            location=[row["lat"], row["lon"]],
+            radius=9, color="white", weight=1.5,
+            fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
+            popup=folium.Popup(_build_popup(row, "south"), max_width=300),
+            tooltip=f"[S] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+        ).add_to(south_group)
+
+    north_group.add_to(m)
+    south_group.add_to(m)
+    folium.LayerControl(collapsed=False).add_to(m)
     return m._repr_html_()
 
 
@@ -401,28 +439,6 @@ def show_region(df_raw: pd.DataFrame, region: str) -> None:
         top_n=top_n,
     )
 
-    # Funnel metrics
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("All ZCTAs", stats["start"])
-    c2.metric(
-        "After airport filter",
-        stats["after_airport"],
-        delta=stats["after_airport"] - stats["start"],
-        delta_color="off",
-    )
-    c3.metric(
-        "After amenity filters",
-        stats["after_amenities"],
-        delta=stats["after_amenities"] - stats["after_airport"],
-        delta_color="off",
-    )
-    c4.metric(
-        "After walkability filters",
-        stats["after_walkability"],
-        delta=stats["after_walkability"] - stats["after_amenities"],
-        delta_color="off",
-    )
-
     if scored.empty:
         st.warning("No candidates survive the current filters — try loosening the sliders.")
         return
@@ -446,7 +462,26 @@ def show_region(df_raw: pd.DataFrame, region: str) -> None:
 # ---------------------------------------------------------------------------
 # Tabs
 # ---------------------------------------------------------------------------
-tab_north, tab_south = st.tabs(["North — buy", "South — rent"])
+tab_combined, tab_north, tab_south = st.tabs(["Combined", "North — buy", "South — rent"])
+
+with tab_combined:
+    north_scored, _ = score_and_filter(
+        north_raw, "north", weights=norm_weights,
+        min_walk=min_walk, min_bike=min_bike, max_airport=max_airport,
+        min_grocery=min_grocery, min_pharmacy=min_pharmacy, top_n=top_n,
+    )
+    south_scored, _ = score_and_filter(
+        south_raw, "south", weights=norm_weights,
+        min_walk=min_walk, min_bike=min_bike, max_airport=max_airport,
+        min_grocery=min_grocery, min_pharmacy=min_pharmacy, top_n=top_n,
+    )
+    north_display = _rename_for_display(north_scored, "north")
+    south_display = _rename_for_display(south_scored, "south")
+    if north_display.empty and south_display.empty:
+        st.warning("No candidates survive the current filters — try loosening the sliders.")
+    else:
+        combined_html = _render_combined_map_html(north_display, south_display)
+        components.html(combined_html, height=580, scrolling=False)
 
 with tab_north:
     show_region(north_raw, "north")

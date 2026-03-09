@@ -6,3 +6,45 @@
 2026-03-09 06:53:19 | ERROR    | __main__:<module>:1 | error
 2026-03-09 06:53:31 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
 2026-03-09 06:53:31 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR…
+2026-03-09 06:56:32 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 06:56:32 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR…
+2026-03-09 06:57:22 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 06:57:22 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR…
+2026-03-09 06:58:32 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 06:58:32 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR from https://www.huduser.gov/portal/datasets/fmr/fmr2024/FMR2024_final_revised.xlsx …
+2026-03-09 06:58:33 | DEBUG    | __main__:fetch_hud_fmr:49 | Downloaded 364,595 bytes
+2026-03-09 06:59:33 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 06:59:33 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR from https://www.huduser.gov/portal/datasets/fmr/fmr2024/FMR2024_final_revised.xlsx …
+2026-03-09 06:59:33 | DEBUG    | __main__:fetch_hud_fmr:49 | Downloaded 364,595 bytes
+2026-03-09 07:00:57 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:00:58 | INFO     | __main__:fetch_hud_fmr:40 | Downloading HUD FMR from https://www.huduser.gov/portal/datasets/fmr/fmr2024/FMR2024_final_revised.xlsx …
+2026-03-09 07:00:58 | DEBUG    | __main__:fetch_hud_fmr:50 | Downloaded 364,595 bytes
+2026-03-09 07:01:30 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:01:30 | INFO     | __main__:fetch_hud_fmr:40 | Downloading HUD FMR from https://www.huduser.gov/portal/datasets/fmr/fmr2024/FMR2024_final_revised.xlsx …
+2026-03-09 07:01:30 | DEBUG    | __main__:fetch_hud_fmr:50 | Downloaded 364,595 bytes
+2026-03-09 07:01:31 | DEBUG    | __main__:fetch_hud_fmr:62 | HUD FMR columns: ['stusps', 'state', 'hud_area_code', 'countyname', 'county_town_name', 'metro', 'hud_area_name', 'fips', 'pop2020', 'fmr_0', 'fmr_1', 'fmr_2', 'fmr_3', 'fmr_4']
+2026-03-09 07:01:31 | DEBUG    | __main__:fetch_hud_fmr:74 | Cached 4,764 counties
+2026-03-09 07:01:31 | DEBUG    | __main__:fetch_crosswalk:81 | Crosswalk: using cache
+2026-03-09 07:01:56 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:01:56 | DEBUG    | __main__:fetch_hud_fmr:37 | HUD FMR: using cache
+2026-03-09 07:01:56 | DEBUG    | __main__:fetch_crosswalk:81 | Crosswalk: using cache
+2026-03-09 07:01:56 | INFO     | __main__:patch_south:117 | fmr_2br matched for 328/589 ZCTAs
+2026-03-09 07:01:56 | SUCCESS  | __main__:patch_south:123 | Patched and saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-09 07:10:36 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:10:36 | INFO     | __main__:main:69 | Running 1 pipeline step(s)…
+2026-03-09 07:10:36 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:10:36 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-09 07:10:36 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:10:37 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 07:10:57 | INFO     | pipeline.06_visualize:run:190 | NORTH: 25 candidates
+2026-03-09 07:10:57 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-09 07:10:57 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 07:11:36 | INFO     | pipeline.06_visualize:run:190 | SOUTH: 25 candidates
+2026-03-09 07:11:36 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-09 07:11:36 | INFO     | pipeline.06_visualize:run:201 | Building combined map…
+2026-03-09 07:11:36 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 07:11:57 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 07:12:37 | SUCCESS  | pipeline.06_visualize:run:249 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-09 07:12:37 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 121.1s
+2026-03-09 07:12:37 | SUCCESS  | __main__:main:76 | Pipeline complete in 2.0 minutes.
+2026-03-09 07:12:37 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
