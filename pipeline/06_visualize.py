@@ -20,6 +20,7 @@ from folium.plugins import MarkerCluster
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from loguru import logger
 from config import OUTPUTS, MAPS
 
 
@@ -147,7 +148,7 @@ def run() -> None:
             raise FileNotFoundError(f"Run pipeline/05_score_and_rank.py first ({in_path})")
 
         df = pd.read_csv(in_path)
-        print(f"\n{region.upper()}: {len(df)} candidates")
+        logger.info(f"{region.upper()}: {len(df)} candidates")
 
         center_lat = df["lat"].mean()
         center_lon = df["lon"].mean()
@@ -155,10 +156,10 @@ def run() -> None:
         m = make_map(df, region, center_lat, center_lon)
         out_path = MAPS / f"{region}_candidates.html"
         m.save(str(out_path))
-        print(f"Saved {out_path}")
+        logger.success(f"Saved {out_path}")
 
     # Combined map (both regions)
-    print("\nBuilding combined map…")
+    logger.info("Building combined map…")
     north_df = pd.read_csv(OUTPUTS / "north_candidates.csv")
     south_df = pd.read_csv(OUTPUTS / "south_candidates.csv")
     north_df["region"] = "north"
@@ -204,7 +205,7 @@ def run() -> None:
 
     combined_path = MAPS / "combined_candidates.html"
     m_combined.save(str(combined_path))
-    print(f"Saved combined map: {combined_path}")
+    logger.success(f"Saved combined map: {combined_path}")
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from loguru import logger
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -64,13 +65,13 @@ def fetch_faa_airports() -> gpd.GeoDataFrame:
     """Download FAA commercial service airports, cache locally."""
     cache = DATA_RAW / "faa_airports.parquet"
     if cache.exists():
-        print("FAA airport data already cached.")
+        logger.debug("FAA airport data already cached.")
         df = pd.read_parquet(cache)
         return gpd.GeoDataFrame(
             df, geometry=gpd.points_from_xy(df["lon"], df["lat"]), crs="EPSG:4326"
         )
 
-    print("Downloading OurAirports airport data…")
+    logger.info("Downloading OurAirports airport data…")
     resp = requests.get(FAA_AIRPORTS_URL, timeout=60)
     resp.raise_for_status()
 
@@ -106,7 +107,7 @@ def fetch_faa_airports() -> gpd.GeoDataFrame:
     ]
 
     commercial.to_parquet(cache, index=False)
-    print(f"Found {len(commercial):,} commercial service airports")
+    logger.info(f"Found {len(commercial):,} commercial service airports")
     return gpd.GeoDataFrame(
         commercial,
         geometry=gpd.points_from_xy(commercial["lon"], commercial["lat"]),
@@ -208,15 +209,13 @@ def run() -> None:
             "Run pipeline/01_geo_filter.py first to generate input files."
         )
 
-    print("Loading geo-filtered candidates…")
+    logger.info("Loading geo-filtered candidates…")
     north = gpd.read_file(north_in)
     south = gpd.read_file(south_in)
-    print(f"  North: {len(north):,} ZCTAs")
-    print(f"  South: {len(south):,} ZCTAs")
+    logger.info(f"North: {len(north):,} ZCTAs  |  South: {len(south):,} ZCTAs")
 
     airports = fetch_faa_airports()
-    print(f"\nBuilding {MAX_AIRPORT_DRIVE_MIN}-min drive isochrones for "
-          f"{len(airports):,} airports…")
+    logger.info(f"Building {MAX_AIRPORT_DRIVE_MIN}-min drive isochrones for {len(airports):,} airports…")
     isochrones = build_radius_isochrones(airports)
 
     # Filter separately so we only join airports relevant to each band
@@ -228,21 +227,19 @@ def run() -> None:
         isochrones.geometry.centroid.y.between(SOUTH_LAT_MIN - 2, SOUTH_LAT_MAX + 2)
     ]
 
-    print("\nFiltering north ZCTAs by airport proximity…")
+    logger.info("Filtering north ZCTAs by airport proximity…")
     north_filtered = filter_zctas_by_airport(north, north_airports)
-    print(f"  {len(north):,} → {len(north_filtered):,} ZCTAs within "
-          f"{MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
+    logger.info(f"North: {len(north):,} → {len(north_filtered):,} ZCTAs within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
 
-    print("\nFiltering south ZCTAs by airport proximity…")
+    logger.info("Filtering south ZCTAs by airport proximity…")
     south_filtered = filter_zctas_by_airport(south, south_airports)
-    print(f"  {len(south):,} → {len(south_filtered):,} ZCTAs within "
-          f"{MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
+    logger.info(f"South: {len(south):,} → {len(south_filtered):,} ZCTAs within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
 
     north_out = DATA_PROCESSED / "north_airport_filtered.geojson"
     south_out = DATA_PROCESSED / "south_airport_filtered.geojson"
     north_filtered.to_file(north_out, driver="GeoJSON")
     south_filtered.to_file(south_out, driver="GeoJSON")
-    print(f"\nSaved:\n  {north_out}\n  {south_out}")
+    logger.success(f"Saved: {north_out}  |  {south_out}")
 
 
 if __name__ == "__main__":

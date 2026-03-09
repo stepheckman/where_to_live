@@ -74,7 +74,7 @@ def score_region(gdf: gpd.GeoDataFrame, region: str, cache_path: Path) -> pd.Dat
         done_zips = set()
 
     todo = df[~df["zcta"].astype(str).isin(done_zips)]
-    print(f"  {region}: {len(done_zips)} cached, {len(todo)} to fetch")
+    logger.debug(f"{region}: {len(done_zips)} cached, {len(todo)} to fetch")
 
     if todo.empty:
         return cached
@@ -103,10 +103,9 @@ def run() -> None:
     south = gpd.read_file(south_in)
 
     if not WALKSCORE_API_KEY:
-        print(
-            "WARNING: WALKSCORE_API_KEY not set in .env\n"
-            "Skipping Walk Score API calls. walk_score and bike_score will be NaN.\n"
-            "Scoring in step 05 will rely on OSM signals only.\n"
+        logger.warning(
+            "WALKSCORE_API_KEY not set in .env — skipping Walk Score API calls. "
+            "walk_score and bike_score will be NaN; step 05 will rely on OSM signals only. "
             "To enable: add WALKSCORE_API_KEY=<your key> to .env"
         )
         # Write through with NaN scores so downstream steps work
@@ -135,11 +134,11 @@ def run() -> None:
             (merged["walk_score"].isna() | (merged["walk_score"] >= MIN_WALK_SCORE)) &
             (merged["bike_score"].isna() | (merged["bike_score"] >= MIN_BIKE_SCORE))
         ]
-        print(f"\n{region.title()}: {pre:,} → {len(merged):,} after Walk/Bike Score filter")
+        logger.info(f"{region.title()}: {pre:,} → {len(merged):,} after Walk/Bike Score filter")
 
         out_path = DATA_PROCESSED / f"{region}_walkscored.parquet"
         merged.to_parquet(out_path, index=False)
-        print(f"Saved {out_path}")
+        logger.success(f"Saved {out_path}")
 
 
 if __name__ == "__main__":

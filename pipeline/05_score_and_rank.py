@@ -23,6 +23,7 @@ import pandas as pd
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from loguru import logger
 from config import (
     DATA_PROCESSED,
     OUTPUTS,
@@ -167,7 +168,7 @@ def run() -> None:
             raise FileNotFoundError(f"Run pipeline/04_osm_amenities.py first ({in_path})")
 
         df = pd.read_parquet(in_path)
-        print(f"\n--- {region.upper()} ({len(df):,} candidates after all filters) ---")
+        logger.info(f"--- {region.upper()} ({len(df):,} candidates after all filters) ---")
 
         scored = compute_scores(df, region)
         top = build_output_row(scored, region)
@@ -175,8 +176,8 @@ def run() -> None:
         out_path = OUTPUTS / f"{region}_candidates.csv"
         top.to_csv(out_path, index=False)
 
-        print(f"Top {len(top)} {region} candidates saved to {out_path}")
-        print("\n" + top[["zcta", "composite_score"] +
+        logger.success(f"Top {len(top)} {region} candidates saved to {out_path}")
+        logger.debug("\n" + top[["zcta", "composite_score"] +
               (["walk_score"] if "walk_score" in top.columns else []) +
               (["median_home_value"] if "median_home_value" in top.columns else []) +
               (["fmr_2br_rent"] if "fmr_2br_rent" in top.columns else [])

@@ -13,6 +13,9 @@ import sys
 import time
 from pathlib import Path
 
+from loguru import logger
+from pipeline.log import setup as setup_logging
+
 
 STEPS = [
     (1, "Geographic pre-filter (ZCTA lat bands + population density)",
@@ -32,17 +35,19 @@ STEPS = [
 
 def run_step(number: int, label: str, module_path: str) -> None:
     import importlib
-    print(f"\n{'='*60}")
-    print(f"STEP {number}: {label}")
-    print(f"{'='*60}")
+    logger.info(f"{'='*50}")
+    logger.info(f"STEP {number}: {label}")
+    logger.info(f"{'='*50}")
     t0 = time.time()
     mod = importlib.import_module(module_path)
     mod.run()
     elapsed = time.time() - t0
-    print(f"\nStep {number} complete in {elapsed:.1f}s")
+    logger.success(f"Step {number} complete in {elapsed:.1f}s")
 
 
 def main() -> None:
+    setup_logging(log_file=Path(__file__).parent / "pipeline.log")
+
     parser = argparse.ArgumentParser(description="Run the where-to-live pipeline")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--from", dest="from_step", type=int, metavar="N",
@@ -54,28 +59,22 @@ def main() -> None:
     if args.only:
         steps_to_run = [s for s in STEPS if s[0] == args.only]
         if not steps_to_run:
-            print(f"Unknown step: {args.only}. Valid steps: 1–{len(STEPS)}")
+            logger.error(f"Unknown step: {args.only}. Valid steps: 1–{len(STEPS)}")
             sys.exit(1)
     elif args.from_step:
         steps_to_run = [s for s in STEPS if s[0] >= args.from_step]
     else:
         steps_to_run = STEPS
 
-    print(f"Running {len(steps_to_run)} pipeline step(s)…")
+    logger.info(f"Running {len(steps_to_run)} pipeline step(s)…")
 
     total_start = time.time()
     for number, label, module in steps_to_run:
         run_step(number, label, module)
 
     total = time.time() - total_start
-    print(f"\n{'='*60}")
-    print(f"Pipeline complete in {total/60:.1f} minutes.")
-    print(f"\nOutputs:")
-    print(f"  outputs/north_candidates.csv")
-    print(f"  outputs/south_candidates.csv")
-    print(f"  outputs/maps/north_candidates.html")
-    print(f"  outputs/maps/south_candidates.html")
-    print(f"  outputs/maps/combined_candidates.html")
+    logger.success(f"Pipeline complete in {total/60:.1f} minutes.")
+    logger.info("Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/")
 
 
 if __name__ == "__main__":

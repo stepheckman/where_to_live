@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from loguru import logger
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -47,11 +48,11 @@ def download_zcta_shapefile() -> Path:
     dest = DATA_RAW / "zcta_2023"
     shp = dest / "tl_2023_us_zcta520.shp"
     if shp.exists():
-        print("ZCTA shapefile already cached.")
+        logger.debug("ZCTA shapefile already cached.")
         return shp
 
     dest.mkdir(parents=True, exist_ok=True)
-    print("Downloading ZCTA shapefile (~100 MB)…")
+    logger.info("Downloading ZCTA shapefile (~100 MB)…")
     resp = requests.get(ZCTA_SHAPEFILE_URL, stream=True, timeout=120)
     resp.raise_for_status()
 
@@ -66,7 +67,7 @@ def download_zcta_shapefile() -> Path:
     with zipfile.ZipFile(buf) as zf:
         zf.extractall(dest)
 
-    print(f"Extracted to {dest}")
+    logger.success(f"Extracted to {dest}")
     return shp
 
 
@@ -74,10 +75,10 @@ def fetch_acs_population() -> pd.DataFrame:
     """Fetch total population for every ZCTA from the Census ACS API."""
     cache = DATA_RAW / "zcta_population.parquet"
     if cache.exists():
-        print("ACS population data already cached.")
+        logger.debug("ACS population data already cached.")
         return pd.read_parquet(cache)
 
-    print("Fetching ACS population data from Census API…")
+    logger.info("Fetching ACS population data from Census API…")
     resp = requests.get(CENSUS_ACS_URL, timeout=60)
     resp.raise_for_status()
 
@@ -94,7 +95,7 @@ def fetch_acs_population() -> pd.DataFrame:
 
     cache.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache, index=False)
-    print(f"Cached {len(df):,} ZCTAs to {cache}")
+    logger.debug(f"Cached {len(df):,} ZCTAs to {cache}")
     return df
 
 
@@ -103,9 +104,9 @@ def run() -> None:
 
     # 1. Load shapefile
     shp_path = download_zcta_shapefile()
-    print("Loading ZCTA shapefile…")
+    logger.info("Loading ZCTA shapefile…")
     gdf = gpd.read_file(shp_path)
-    print(f"  {len(gdf):,} ZCTAs loaded")
+    logger.debug(f"{len(gdf):,} ZCTAs loaded")
 
     # 2. Compute centroids in WGS84
     gdf = gdf.to_crs("EPSG:4326")
@@ -136,17 +137,15 @@ def run() -> None:
     north = gdf[north_mask].copy()
     south = gdf[south_mask].copy()
 
-    print(f"\nNorth ({NORTH_LAT_MIN}°–{NORTH_LAT_MAX}°N, ≥{MIN_POP_DENSITY} ppl/mi²): "
-          f"{len(north):,} ZCTAs")
-    print(f"South ({SOUTH_LAT_MIN}°–{SOUTH_LAT_MAX}°N, ≥{MIN_POP_DENSITY} ppl/mi²): "
-          f"{len(south):,} ZCTAs")
+    logger.info(f"North ({NORTH_LAT_MIN}°–{NORTH_LAT_MAX}°N, ≥{MIN_POP_DENSITY} ppl/mi²): {len(north):,} ZCTAs")
+    logger.info(f"South ({SOUTH_LAT_MIN}°–{SOUTH_LAT_MAX}°N, ≥{MIN_POP_DENSITY} ppl/mi²): {len(south):,} ZCTAs")
 
     # 6. Save
     north_out = DATA_PROCESSED / "north_candidates_geo.geojson"
     south_out = DATA_PROCESSED / "south_candidates_geo.geojson"
     north.to_file(north_out, driver="GeoJSON")
     south.to_file(south_out, driver="GeoJSON")
-    print(f"\nSaved:\n  {north_out}\n  {south_out}")
+    logger.success(f"Saved: {north_out}  |  {south_out}")
 
 
 if __name__ == "__main__":

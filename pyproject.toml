@@ -18,6 +18,7 @@ dependencies = [
     "scipy>=1.12", # normalization helpers
     "openpyxl>=3.1", # read Zillow / HUD Excel files
     "streamlit>=1.55.0",
+    "loguru>=0.7.3",
 ]
 
 [tool.uv]

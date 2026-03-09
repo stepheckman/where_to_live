@@ -27,6 +27,7 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from loguru import logger
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -108,7 +109,7 @@ def fetch_amenities_for_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
         done_zips = set()
 
     todo = df[~df["ZCTA5CE20"].astype(str).isin(done_zips)]
-    print(f"  {region}: {len(done_zips)} cached, {len(todo)} to fetch")
+    logger.debug(f"{region}: {len(done_zips)} cached, {len(todo)} to fetch via Overpass")
 
     results = []
     for _, row in tqdm(todo.iterrows(), total=len(todo), desc=f"OSM {region}"):
@@ -139,15 +140,15 @@ def fetch_zillow_zhvi() -> pd.DataFrame:
     """
     cache = DATA_RAW / "zillow_zhvi.parquet"
     if cache.exists():
-        print("Zillow ZHVI data already cached.")
+        logger.debug("Zillow ZHVI data already cached.")
         return pd.read_parquet(cache)
 
-    print("Downloading Zillow ZHVI data…")
+    logger.info("Downloading Zillow ZHVI data…")
     try:
         resp = requests.get(ZILLOW_ZHVI_URL, timeout=120)
         resp.raise_for_status()
     except Exception as exc:
-        print(f"WARNING: Could not download Zillow data ({exc}). Skipping home value signal.")
+        logger.warning(f"Could not download Zillow data ({exc}) — skipping home value signal.")
         return pd.DataFrame(columns=["zip", "zhvi_latest"])
 
     df = pd.read_csv(io.StringIO(resp.text))
@@ -155,7 +156,7 @@ def fetch_zillow_zhvi() -> pd.DataFrame:
     # The rightmost columns are dates; the last one is the most recent value
     date_cols = [c for c in df.columns if c[:4].isdigit()]
     if not date_cols:
-        print("WARNING: Zillow CSV format unexpected. Skipping home value signal.")
+        logger.warning("Zillow CSV format unexpected — skipping home value signal.")
         return pd.DataFrame(columns=["zip", "zhvi_latest"])
 
     latest_col = sorted(date_cols)[-1]
@@ -165,7 +166,7 @@ def fetch_zillow_zhvi() -> pd.DataFrame:
     result["zhvi_latest"] = pd.to_numeric(result["zhvi_latest"], errors="coerce")
 
     result.to_parquet(cache, index=False)
-    print(f"Cached Zillow ZHVI for {len(result):,} ZIPs")
+    logger.debug(f"Cached Zillow ZHVI for {len(result):,} ZIPs")
     return result
 
 
@@ -180,15 +181,15 @@ def fetch_hud_fmr() -> pd.DataFrame:
     """
     cache = DATA_RAW / "hud_fmr.parquet"
     if cache.exists():
-        print("HUD FMR data already cached.")
+        logger.debug("HUD FMR data already cached.")
         return pd.read_parquet(cache)
 
-    print("Downloading HUD Fair Market Rents…")
+    logger.info("Downloading HUD Fair Market Rents…")
     try:
         resp = requests.get(HUD_FMR_URL, timeout=60)
         resp.raise_for_status()
     except Exception as exc:
-        print(f"WARNING: Could not download HUD FMR data ({exc}). Skipping rent signal.")
+        logger.warning(f"Could not download HUD FMR data ({exc}) — skipping rent signal.")
         return pd.DataFrame(columns=["fips_county", "fmr_2br"])
 
     df = pd.read_excel(io.BytesIO(resp.content))
@@ -199,7 +200,7 @@ def fetch_hud_fmr() -> pd.DataFrame:
     fmr_col = next((c for c in df.columns if "fmr_2" in c or "fmr2" in c), None)
 
     if fips_col is None or fmr_col is None:
-        print(f"WARNING: HUD FMR columns not found. Available: {list(df.columns)}")
+        logger.warning(f"HUD FMR columns not found. Available: {list(df.columns)}")
         return pd.DataFrame(columns=["fips_county", "fmr_2br"])
 
     result = df[[fips_col, fmr_col]].rename(columns={
@@ -210,7 +211,7 @@ def fetch_hud_fmr() -> pd.DataFrame:
     result["fmr_2br"] = pd.to_numeric(result["fmr_2br"], errors="coerce")
 
     result.to_parquet(cache, index=False)
-    print(f"Cached HUD FMR for {len(result):,} counties")
+    logger.debug(f"Cached HUD FMR for {len(result):,} counties")
     return result
 
 
@@ -232,7 +233,7 @@ def fetch_zcta_county_crosswalk() -> pd.DataFrame:
         "https://www2.census.gov/geo/docs/maps-data/data/rel2020/"
         "zcta520/tab20_zcta520_county20_natl.txt"
     )
-    print("Downloading ZCTA→County crosswalk…")
+    logger.info("Downloading ZCTA→County crosswalk…")
     try:
         resp = requests.get(census_url, timeout=60)
         resp.raise_for_status()
@@ -250,7 +251,7 @@ def fetch_zcta_county_crosswalk() -> pd.DataFrame:
         # Keep the county with the largest areal intersection (first row per zcta)
         df = df.drop_duplicates(subset="zcta", keep="first")
     except Exception as exc:
-        print(f"WARNING: Could not download crosswalk ({exc}). Skipping county join.")
+        logger.warning(f"Could not download crosswalk ({exc}) — skipping county join.")
         return pd.DataFrame(columns=["zcta", "county_fips"])
 
     df.to_parquet(cache, index=False)
@@ -270,7 +271,7 @@ def run() -> None:
             raise FileNotFoundError(f"Run pipeline/03_walkscore.py first ({in_path})")
 
         df = pd.read_parquet(in_path)
-        print(f"\n--- {region.upper()} ({len(df):,} candidates) ---")
+        logger.info(f"--- {region.upper()} ({len(df):,} candidates) ---")
 
         # OSM amenities
         amenity_scores = fetch_amenities_for_region(df, region)
@@ -286,7 +287,7 @@ def run() -> None:
             (df["grocery_count"] >= MIN_GROCERY_COUNT) &
             (df["pharmacy_count"] >= MIN_PHARMACY_COUNT)
         ]
-        print(f"  Amenity hard filter: {pre:,} → {len(df):,} ZCTAs")
+        logger.info(f"Amenity hard filter: {pre:,} → {len(df):,} ZCTAs")
 
     # Affordability signals
     zillow = fetch_zillow_zhvi()
@@ -317,8 +318,7 @@ def run() -> None:
                 zillow.rename(columns={"zip": "ZCTA5CE20_str"}),
                 on="ZCTA5CE20_str", how="left"
             ).drop(columns=["ZCTA5CE20_str"], errors="ignore")
-            print(f"  North: Zillow ZHVI joined for "
-                  f"{df['zhvi_latest'].notna().sum():,}/{len(df):,} ZCTAs")
+            logger.info(f"North: Zillow ZHVI joined for {df['zhvi_latest'].notna().sum():,}/{len(df):,} ZCTAs")
 
         if region == "south" and not hud.empty and not crosswalk.empty:
             df["ZCTA5CE20_str"] = df["ZCTA5CE20"].astype(str).str.zfill(5)
@@ -328,12 +328,11 @@ def run() -> None:
             )
             df = df.merge(hud, on="county_fips", how="left")
             df = df.drop(columns=["ZCTA5CE20_str", "county_fips"], errors="ignore")
-            print(f"  South: HUD FMR joined for "
-                  f"{df['fmr_2br'].notna().sum():,}/{len(df):,} ZCTAs")
+            logger.info(f"South: HUD FMR joined for {df['fmr_2br'].notna().sum():,}/{len(df):,} ZCTAs")
 
         out_path = DATA_PROCESSED / f"{region}_amenities.parquet"
         df.to_parquet(out_path, index=False)
-        print(f"  Saved {out_path}")
+        logger.success(f"Saved {out_path}")
 
 
 if __name__ == "__main__":

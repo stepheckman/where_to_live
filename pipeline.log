@@ -1,0 +1,8 @@
+2026-03-09 06:53:19 | DEBUG    | pipeline.log:setup:48 | Logging to pipeline.log
+2026-03-09 06:53:19 | DEBUG    | __main__:<module>:1 | debug
+2026-03-09 06:53:19 | INFO     | __main__:<module>:1 | info
+2026-03-09 06:53:19 | SUCCESS  | __main__:<module>:1 | success
+2026-03-09 06:53:19 | WARNING  | __main__:<module>:1 | warning
+2026-03-09 06:53:19 | ERROR    | __main__:<module>:1 | error
+2026-03-09 06:53:31 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 06:53:31 | INFO     | __main__:fetch_hud_fmr:39 | Downloading HUD FMR…
