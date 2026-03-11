@@ -22,7 +22,7 @@ STEPS = [
      "pipeline.01_geo_filter"),
     (2, "Airport proximity filter (60-min drive isochrones)",
      "pipeline.02_airport_proximity"),
-    (3, "Walk Score + Bike Score (API or OSM fallback)",
+    (3, "Walk Score + Bike Score (scrape walkscore.com for top candidates)",
      "pipeline.03_walkscore"),
     (4, "OSM amenities + affordability data (Zillow / HUD FMR)",
      "pipeline.04_osm_amenities"),

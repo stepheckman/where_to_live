@@ -36,6 +36,7 @@ from config import (
     W_BIKE,
     W_CAFE,
     W_GROCERY,
+    W_HIKING,
     W_HOME_VALUE,
     W_PHARMACY,
     W_RESTAURANT,
@@ -120,6 +121,7 @@ with st.sidebar:
     w_cafe = st.slider("Cafés", 0.0, 1.0, W_CAFE, 0.05)
     w_restaurant = st.slider("Restaurants", 0.0, 1.0, W_RESTAURANT, 0.05)
     w_pharmacy = st.slider("Pharmacies", 0.0, 1.0, W_PHARMACY, 0.05)
+    w_hiking = st.slider("Hiking access", 0.0, 1.0, W_HIKING, 0.05)
     w_afford = st.slider("Affordability", 0.0, 1.0, W_HOME_VALUE, 0.05)
 
     raw_weights = dict(
@@ -129,6 +131,7 @@ with st.sidebar:
         cafe=w_cafe,
         restaurant=w_restaurant,
         pharmacy=w_pharmacy,
+        hiking=w_hiking,
         afford=w_afford,
     )
     total_w = sum(raw_weights.values()) or 1.0
@@ -141,6 +144,7 @@ with st.sidebar:
         "cafe": "Café",
         "restaurant": "Rest",
         "pharmacy": "Rx",
+        "hiking": "Hike",
         "afford": "$$",
     }
     st.caption(
@@ -218,6 +222,15 @@ def score_and_filter(
     df["n_restaurant"] = _normalize(df["restaurant_count"], cap=CAP_RESTAURANT)
     df["n_pharmacy"] = _normalize(df["pharmacy_count"], cap=CAP_PHARMACY)
 
+    # Hiking: combine distance (inverted) and count signals equally
+    has_hiking = "dist_nearest_park_km" in df.columns and df["dist_nearest_park_km"].notna().any()
+    if has_hiking:
+        n_dist = _normalize(df["dist_nearest_park_km"], invert=True)
+        n_count = _normalize(col_or_nan("parks_within_50km"))
+        df["n_hiking"] = (n_dist.fillna(0.5) + n_count.fillna(0.5)) / 2
+    else:
+        df["n_hiking"] = pd.Series(np.nan, index=df.index)
+
     afford_col = "zhvi_latest" if region == "north" else "fmr_2br"
     df["n_afford"] = (
         _normalize(df[afford_col], invert=True)
@@ -225,10 +238,12 @@ def score_and_filter(
         else pd.Series(np.nan, index=df.index)
     )
 
-    # Re-normalize weights (zero out affordability if data missing)
+    # Re-normalize weights (zero out signals where data is missing)
     w = weights.copy()
     if df["n_afford"].isna().all():
         w["afford"] = 0.0
+    if df["n_hiking"].isna().all():
+        w["hiking"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -242,6 +257,7 @@ def score_and_filter(
         + w["cafe"] * safe(df["n_cafe"])
         + w["restaurant"] * safe(df["n_restaurant"])
         + w["pharmacy"] * safe(df["n_pharmacy"])
+        + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
     ) * 100
 
@@ -314,6 +330,8 @@ def _build_popup(row: pd.Series, region: str) -> str:
         <tr><td><b>Restaurant</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
         <tr><td><b>Pharmacy</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
         {afford_row}
+        <tr><td><b>Park dist</b></td><td>{'N/A' if pd.isna(row.get('dist_nearest_park_km')) else f"{row['dist_nearest_park_km']:.1f} km"}</td></tr>
+        <tr><td><b>Parks &lt;50km</b></td><td>{int(row.get('parks_within_50km', 0)) if pd.notna(row.get('parks_within_50km')) else 'N/A'}</td></tr>
         <tr><td><b>Airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>
       <div style="margin-top:8px;">
@@ -403,26 +421,30 @@ DISPLAY_COLS = {
     "north": [
         "zcta", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
+        "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "nearest_airport", "airport_drive_min",
     ],
     "south": [
         "zcta", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
+        "dist_nearest_park_km", "parks_within_50km",
         "fmr_2br_rent", "nearest_airport", "airport_drive_min",
     ],
 }
 
 COLUMN_CONFIG = {
-    "composite_score":   st.column_config.NumberColumn("Score",       format="%.1f"),
-    "walk_score":        st.column_config.NumberColumn("Walk",        format="%.0f"),
-    "bike_score":        st.column_config.NumberColumn("Bike",        format="%.0f"),
-    "grocery_count":     st.column_config.NumberColumn("Grocery",     format="%d"),
-    "cafe_count":        st.column_config.NumberColumn("Café",        format="%d"),
-    "restaurant_count":  st.column_config.NumberColumn("Restaurant",  format="%d"),
-    "pharmacy_count":    st.column_config.NumberColumn("Pharmacy",    format="%d"),
-    "median_home_value": st.column_config.NumberColumn("Home Value",  format="$%,.0f"),
-    "fmr_2br_rent":      st.column_config.NumberColumn("2BR Rent/mo", format="$%,.0f"),
-    "airport_drive_min": st.column_config.NumberColumn("Airport (min)", format="%.0f"),
+    "composite_score":      st.column_config.NumberColumn("Score",          format="%.1f"),
+    "walk_score":           st.column_config.NumberColumn("Walk",           format="%.0f"),
+    "bike_score":           st.column_config.NumberColumn("Bike",           format="%.0f"),
+    "grocery_count":        st.column_config.NumberColumn("Grocery",        format="%d"),
+    "cafe_count":           st.column_config.NumberColumn("Café",           format="%d"),
+    "restaurant_count":     st.column_config.NumberColumn("Restaurant",     format="%d"),
+    "pharmacy_count":       st.column_config.NumberColumn("Pharmacy",       format="%d"),
+    "dist_nearest_park_km": st.column_config.NumberColumn("Park dist (km)", format="%.1f"),
+    "parks_within_50km":    st.column_config.NumberColumn("Parks <50km",    format="%d"),
+    "median_home_value":    st.column_config.NumberColumn("Home Value",     format="$%,.0f"),
+    "fmr_2br_rent":         st.column_config.NumberColumn("2BR Rent/mo",    format="$%,.0f"),
+    "airport_drive_min":    st.column_config.NumberColumn("Airport (min)",  format="%.0f"),
 }
 
 

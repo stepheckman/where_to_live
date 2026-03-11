@@ -48,3 +48,284 @@
 2026-03-09 07:12:37 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 121.1s
 2026-03-09 07:12:37 | SUCCESS  | __main__:main:76 | Pipeline complete in 2.0 minutes.
 2026-03-09 07:12:37 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-09 07:30:20 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:30:20 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-09 07:30:20 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:30:20 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-09 07:30:20 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:30:36 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:30:36 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-09 07:30:36 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:30:36 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-09 07:30:36 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:30:57 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:30:57 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-09 07:30:57 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:30:57 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-09 07:30:57 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:31:01 | INFO     | pipeline.04_osm_amenities:run:467 | --- NORTH (2,017 candidates) ---
+2026-03-09 07:31:01 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | north: 2017 cached, 0 to fetch via Overpass
+2026-03-09 07:31:01 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 2,017 → 950 ZCTAs
+2026-03-09 07:31:01 | INFO     | pipeline.04_osm_amenities:run:467 | --- SOUTH (1,467 candidates) ---
+2026-03-09 07:31:01 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | south: 1467 cached, 0 to fetch via Overpass
+2026-03-09 07:31:01 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 1,467 → 589 ZCTAs
+2026-03-09 07:31:01 | DEBUG    | pipeline.04_osm_amenities:fetch_zillow_zhvi:153 | Zillow ZHVI data already cached.
+2026-03-09 07:31:01 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:194 | HUD FMR data already cached.
+2026-03-09 07:31:01 | INFO     | pipeline.04_osm_amenities:_download_padus:296 | Querying ScienceBase for PAD-US download URL…
+2026-03-09 07:32:01 | WARNING  | pipeline.04_osm_amenities:run:500 | Could not compute hiking scores (HTTPSConnectionPool(host='www.sciencebase.gov', port=443): Max retries exceeded with url: /catalog/item/652ee185d34e6bef37e0c4d0?format=json (Caused by ConnectTimeoutError(<HTTPSConnection(host='www.sciencebase.gov', port=443) at 0x1147eb8c0>, 'Connection to www.sciencebase.gov timed out. (connect timeout=30)'))) — skipping hiking signal.
+2026-03-09 07:32:01 | INFO     | pipeline.04_osm_amenities:run:538 | North: Zillow ZHVI joined for 900/950 ZCTAs
+2026-03-09 07:32:01 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-09 07:58:57 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-09 07:58:57 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-09 07:58:57 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:58:57 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-09 07:58:57 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:58:58 | INFO     | pipeline.04_osm_amenities:run:467 | --- NORTH (2,017 candidates) ---
+2026-03-09 07:58:58 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | north: 2017 cached, 0 to fetch via Overpass
+2026-03-09 07:58:58 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 2,017 → 950 ZCTAs
+2026-03-09 07:58:58 | INFO     | pipeline.04_osm_amenities:run:467 | --- SOUTH (1,467 candidates) ---
+2026-03-09 07:58:58 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | south: 1467 cached, 0 to fetch via Overpass
+2026-03-09 07:58:58 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 1,467 → 589 ZCTAs
+2026-03-09 07:58:58 | DEBUG    | pipeline.04_osm_amenities:fetch_zillow_zhvi:153 | Zillow ZHVI data already cached.
+2026-03-09 07:58:58 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:194 | HUD FMR data already cached.
+2026-03-09 07:58:58 | INFO     | pipeline.04_osm_amenities:_download_padus:296 | Querying ScienceBase for PAD-US download URL…
+2026-03-09 07:59:58 | WARNING  | pipeline.04_osm_amenities:run:500 | Could not compute hiking scores (HTTPSConnectionPool(host='www.sciencebase.gov', port=443): Max retries exceeded with url: /catalog/item/652ee185d34e6bef37e0c4d0?format=json (Caused by ConnectTimeoutError(<HTTPSConnection(host='www.sciencebase.gov', port=443) at 0x116def8c0>, 'Connection to www.sciencebase.gov timed out. (connect timeout=30)'))) — skipping hiking signal.
+2026-03-09 07:59:58 | INFO     | pipeline.04_osm_amenities:run:538 | North: Zillow ZHVI joined for 900/950 ZCTAs
+2026-03-09 07:59:58 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-09 07:59:58 | INFO     | pipeline.04_osm_amenities:run:548 | South: HUD FMR joined for 328/589 ZCTAs
+2026-03-09 07:59:58 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-09 07:59:58 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 61.0s
+2026-03-09 07:59:58 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:59:58 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-09 07:59:58 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:59:58 | INFO     | pipeline.05_score_and_rank:run:191 | --- NORTH (950 candidates after all filters) ---
+2026-03-09 07:59:58 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-09 07:59:58 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  median_home_value
+15219        81.710892         NaN      142155.712544
+53204        81.684592         NaN      151227.439721
+60615        81.414276         NaN      244465.461375
+60602        81.413422         NaN      244759.911544
+60660        81.320761         NaN      276720.745632
+60606        81.257656         NaN      298487.168878
+60605        81.236783         NaN      305686.749280
+60604        81.234898         NaN      306337.027318
+60613        81.192021         NaN      321126.039753
+60661        81.172134         NaN      327985.652937
+2026-03-09 07:59:58 | INFO     | pipeline.05_score_and_rank:run:191 | --- SOUTH (589 candidates after all filters) ---
+2026-03-09 07:59:58 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-09 07:59:58 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  fmr_2br_rent
+70116        79.865904         NaN        1362.0
+90017        77.000000         NaN           NaN
+90404        77.000000         NaN           NaN
+90403        77.000000         NaN           NaN
+91210        77.000000         NaN           NaN
+91502        77.000000         NaN           NaN
+85251        77.000000         NaN           NaN
+91367        77.000000         NaN           NaN
+90014        77.000000         NaN           NaN
+90036        77.000000         NaN           NaN
+2026-03-09 07:59:58 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-09 07:59:58 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-09 07:59:58 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-09 07:59:58 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-09 07:59:58 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 08:00:16 | INFO     | pipeline.06_visualize:run:190 | NORTH: 25 candidates
+2026-03-09 08:00:16 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-09 08:00:16 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 08:00:56 | INFO     | pipeline.06_visualize:run:190 | SOUTH: 25 candidates
+2026-03-09 08:00:56 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-09 08:00:56 | INFO     | pipeline.06_visualize:run:201 | Building combined map…
+2026-03-09 08:00:56 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 08:01:38 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-09 08:02:21 | SUCCESS  | pipeline.06_visualize:run:249 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-09 08:02:21 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 142.9s
+2026-03-09 08:02:21 | SUCCESS  | __main__:main:76 | Pipeline complete in 3.4 minutes.
+2026-03-09 08:02:21 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-11 07:40:31 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-11 07:40:31 | INFO     | __main__:main:69 | Running 6 pipeline step(s)…
+2026-03-11 07:40:31 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:40:31 | INFO     | __main__:run_step:39 | STEP 1: Geographic pre-filter (ZCTA lat bands + population density)
+2026-03-11 07:40:31 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:40:31 | DEBUG    | pipeline.01_geo_filter:download_zcta_shapefile:51 | ZCTA shapefile already cached.
+2026-03-11 07:40:31 | INFO     | pipeline.01_geo_filter:run:107 | Loading ZCTA shapefile…
+2026-03-11 07:40:33 | DEBUG    | pipeline.01_geo_filter:run:109 | 33,791 ZCTAs loaded
+2026-03-11 07:40:43 | DEBUG    | pipeline.01_geo_filter:fetch_acs_population:78 | ACS population data already cached.
+2026-03-11 07:40:43 | INFO     | pipeline.01_geo_filter:run:140 | North (40.0°–49.0°N, ≥2000 ppl/mi²): 2,143 ZCTAs
+2026-03-11 07:40:43 | INFO     | pipeline.01_geo_filter:run:141 | South (25.0°–35.0°N, ≥2000 ppl/mi²): 1,530 ZCTAs
+2026-03-11 07:40:44 | SUCCESS  | pipeline.01_geo_filter:run:148 | Saved: /Users/steph/code/where_to_live/data/processed/north_candidates_geo.geojson  |  /Users/steph/code/where_to_live/data/processed/south_candidates_geo.geojson
+2026-03-11 07:40:45 | SUCCESS  | __main__:run_step:45 | Step 1 complete in 13.9s
+2026-03-11 07:40:45 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:40:45 | INFO     | __main__:run_step:39 | STEP 2: Airport proximity filter (60-min drive isochrones)
+2026-03-11 07:40:45 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:40:45 | INFO     | pipeline.02_airport_proximity:run:212 | Loading geo-filtered candidates…
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:215 | North: 2,143 ZCTAs  |  South: 1,530 ZCTAs
+2026-03-11 07:40:46 | DEBUG    | pipeline.02_airport_proximity:fetch_faa_airports:68 | FAA airport data already cached.
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:218 | Building 60-min drive isochrones for 458 airports…
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:230 | Filtering north ZCTAs by airport proximity…
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:232 | North: 2,143 → 2,017 ZCTAs within 60 min of a commercial airport
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:234 | Filtering south ZCTAs by airport proximity…
+2026-03-11 07:40:46 | INFO     | pipeline.02_airport_proximity:run:236 | South: 1,530 → 1,467 ZCTAs within 60 min of a commercial airport
+2026-03-11 07:40:47 | SUCCESS  | pipeline.02_airport_proximity:run:242 | Saved: /Users/steph/code/where_to_live/data/processed/north_airport_filtered.geojson  |  /Users/steph/code/where_to_live/data/processed/south_airport_filtered.geojson
+2026-03-11 07:40:47 | SUCCESS  | __main__:run_step:45 | Step 2 complete in 2.7s
+2026-03-11 07:40:47 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:40:47 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for top candidates)
+2026-03-11 07:40:47 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:40:48 | INFO     | pipeline.03_walkscore:run:135 | North: scraping Walk Score for 75 candidates (0 already cached, 75 target)
+2026-03-11 07:42:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:82 | Scrape failed for (40.74484546979223, -73.92046773910404): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.744845/lng=-73.920468
+2026-03-11 07:47:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:82 | Scrape failed for (40.74518169437849, -73.97805328715827): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.745182/lng=-73.978053
+2026-03-11 07:48:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:82 | Scrape failed for (40.76581497077318, -73.98518142627411): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.765815/lng=-73.985181
+2026-03-11 07:48:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:82 | Scrape failed for (40.755326781054244, -73.99269637687013): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.755327/lng=-73.992696
+2026-03-11 07:49:00 | INFO     | pipeline.03_walkscore:run:153 | Successfully scraped 71/75 scores
+2026-03-11 07:49:00 | INFO     | pipeline.03_walkscore:run:178 | North: dropped 1 ZCTAs below Walk Score 65 / Bike Score 50
+2026-03-11 07:49:00 | SUCCESS  | pipeline.03_walkscore:run:219 | Saved /Users/steph/code/where_to_live/data/processed/north_walkscored.parquet (2,016 candidates)
+2026-03-11 07:49:00 | INFO     | pipeline.03_walkscore:run:135 | South: scraping Walk Score for 75 candidates (0 already cached, 75 target)
+2026-03-11 07:55:54 | INFO     | pipeline.03_walkscore:run:153 | Successfully scraped 75/75 scores
+2026-03-11 07:55:54 | INFO     | pipeline.03_walkscore:run:178 | South: dropped 12 ZCTAs below Walk Score 65 / Bike Score 50
+2026-03-11 07:55:54 | SUCCESS  | pipeline.03_walkscore:run:219 | Saved /Users/steph/code/where_to_live/data/processed/south_walkscored.parquet (1,455 candidates)
+2026-03-11 07:55:54 | SUCCESS  | __main__:run_step:45 | Step 3 complete in 906.3s
+2026-03-11 07:55:54 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:55:54 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-11 07:55:54 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:55:54 | INFO     | pipeline.04_osm_amenities:run:467 | --- NORTH (2,016 candidates) ---
+2026-03-11 07:55:54 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | north: 2017 cached, 0 to fetch via Overpass
+2026-03-11 07:55:54 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 2,016 → 949 ZCTAs
+2026-03-11 07:55:54 | INFO     | pipeline.04_osm_amenities:run:467 | --- SOUTH (1,455 candidates) ---
+2026-03-11 07:55:54 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | south: 1467 cached, 0 to fetch via Overpass
+2026-03-11 07:55:54 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 1,455 → 577 ZCTAs
+2026-03-11 07:55:54 | DEBUG    | pipeline.04_osm_amenities:fetch_zillow_zhvi:153 | Zillow ZHVI data already cached.
+2026-03-11 07:55:54 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:194 | HUD FMR data already cached.
+2026-03-11 07:55:54 | INFO     | pipeline.04_osm_amenities:_download_padus:296 | Querying ScienceBase for PAD-US download URL…
+2026-03-11 07:56:25 | WARNING  | pipeline.04_osm_amenities:run:500 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-11 07:56:25 | INFO     | pipeline.04_osm_amenities:run:538 | North: Zillow ZHVI joined for 899/949 ZCTAs
+2026-03-11 07:56:25 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-11 07:56:25 | INFO     | pipeline.04_osm_amenities:run:548 | South: HUD FMR joined for 325/577 ZCTAs
+2026-03-11 07:56:25 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-11 07:56:25 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 31.6s
+2026-03-11 07:56:25 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:56:25 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-11 07:56:25 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:56:25 | INFO     | pipeline.05_score_and_rank:run:191 | --- NORTH (949 candidates after all filters) ---
+2026-03-11 07:56:25 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-11 07:56:25 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  median_home_value
+97209        78.227684        97.0       3.513246e+05
+10009        77.111321        98.0       1.002466e+06
+02113        76.674647       100.0       7.151567e+05
+02143        76.532762        98.0       9.109962e+05
+10010        76.422416       100.0       1.287204e+06
+11237        76.046426        98.0       1.078744e+06
+02109        76.038611       100.0       9.345400e+05
+98104        75.679207        97.0       5.512854e+05
+10031        75.605531        99.0       5.268073e+05
+11249        75.553286        98.0       1.442858e+06
+2026-03-11 07:56:25 | INFO     | pipeline.05_score_and_rank:run:191 | --- SOUTH (577 candidates after all filters) ---
+2026-03-11 07:56:25 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-11 07:56:25 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  fmr_2br_rent
+70116        75.774994        93.0        1362.0
+90014        74.561818        97.0           NaN
+90291        71.485455        95.0           NaN
+93101        69.300909        92.0           NaN
+90404        69.096364        89.0           NaN
+90013        68.065455        95.0           NaN
+91101        67.795455        95.0           NaN
+90401        67.615455        95.0           NaN
+90007        66.510909        92.0           NaN
+30308        66.139321        90.0        1844.0
+2026-03-11 07:56:25 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-11 07:56:25 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 07:56:25 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-11 07:56:25 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 07:56:25 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 07:56:44 | INFO     | pipeline.06_visualize:run:190 | NORTH: 25 candidates
+2026-03-11 07:56:44 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-11 07:56:44 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 07:57:23 | INFO     | pipeline.06_visualize:run:190 | SOUTH: 25 candidates
+2026-03-11 07:57:23 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-11 07:57:23 | INFO     | pipeline.06_visualize:run:201 | Building combined map…
+2026-03-11 07:57:23 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 07:58:03 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 07:58:42 | SUCCESS  | pipeline.06_visualize:run:249 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-11 07:58:42 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 136.7s
+2026-03-11 07:58:42 | SUCCESS  | __main__:main:76 | Pipeline complete in 18.2 minutes.
+2026-03-11 07:58:42 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-11 08:03:42 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-11 08:03:42 | INFO     | __main__:main:69 | Running 4 pipeline step(s)…
+2026-03-11 08:03:42 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 08:03:42 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for top candidates)
+2026-03-11 08:03:42 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 08:03:43 | INFO     | pipeline.03_walkscore:run:185 | North: using 75 cached Walk Score results
+2026-03-11 08:03:43 | INFO     | pipeline.03_walkscore:run:201 | North: dropped 1 ZCTAs below Walk Score 65 / Bike Score 50
+2026-03-11 08:03:43 | SUCCESS  | pipeline.03_walkscore:run:219 | Saved /Users/steph/code/where_to_live/data/processed/north_walkscored.parquet (2,016 candidates)
+2026-03-11 08:03:43 | INFO     | pipeline.03_walkscore:run:185 | South: using 75 cached Walk Score results
+2026-03-11 08:03:43 | INFO     | pipeline.03_walkscore:run:201 | South: dropped 12 ZCTAs below Walk Score 65 / Bike Score 50
+2026-03-11 08:03:43 | SUCCESS  | pipeline.03_walkscore:run:219 | Saved /Users/steph/code/where_to_live/data/processed/south_walkscored.parquet (1,455 candidates)
+2026-03-11 08:03:43 | SUCCESS  | __main__:run_step:45 | Step 3 complete in 1.6s
+2026-03-11 08:03:43 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 08:03:43 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Zillow / HUD FMR)
+2026-03-11 08:03:43 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 08:03:44 | INFO     | pipeline.04_osm_amenities:run:467 | --- NORTH (2,016 candidates) ---
+2026-03-11 08:03:44 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | north: 2017 cached, 0 to fetch via Overpass
+2026-03-11 08:03:44 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 2,016 → 949 ZCTAs
+2026-03-11 08:03:44 | INFO     | pipeline.04_osm_amenities:run:467 | --- SOUTH (1,455 candidates) ---
+2026-03-11 08:03:44 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:122 | south: 1467 cached, 0 to fetch via Overpass
+2026-03-11 08:03:44 | INFO     | pipeline.04_osm_amenities:run:483 | Amenity hard filter: 1,455 → 577 ZCTAs
+2026-03-11 08:03:44 | DEBUG    | pipeline.04_osm_amenities:fetch_zillow_zhvi:153 | Zillow ZHVI data already cached.
+2026-03-11 08:03:44 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:194 | HUD FMR data already cached.
+2026-03-11 08:03:44 | INFO     | pipeline.04_osm_amenities:_download_padus:296 | Querying ScienceBase for PAD-US download URL…
+2026-03-11 08:04:18 | WARNING  | pipeline.04_osm_amenities:run:500 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-11 08:04:18 | INFO     | pipeline.04_osm_amenities:run:538 | North: Zillow ZHVI joined for 899/949 ZCTAs
+2026-03-11 08:04:18 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-11 08:04:18 | INFO     | pipeline.04_osm_amenities:run:548 | South: HUD FMR joined for 325/577 ZCTAs
+2026-03-11 08:04:18 | SUCCESS  | pipeline.04_osm_amenities:run:552 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-11 08:04:18 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 34.3s
+2026-03-11 08:04:18 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 08:04:18 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-11 08:04:18 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 08:04:18 | INFO     | pipeline.05_score_and_rank:run:191 | --- NORTH (949 candidates after all filters) ---
+2026-03-11 08:04:18 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-11 08:04:18 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  median_home_value
+97209        78.227684        97.0       3.513246e+05
+10009        77.111321        98.0       1.002466e+06
+02113        76.674647       100.0       7.151567e+05
+02143        76.532762        98.0       9.109962e+05
+10010        76.422416       100.0       1.287204e+06
+11237        76.046426        98.0       1.078744e+06
+02109        76.038611       100.0       9.345400e+05
+98104        75.679207        97.0       5.512854e+05
+10031        75.605531        99.0       5.268073e+05
+11249        75.553286        98.0       1.442858e+06
+2026-03-11 08:04:18 | INFO     | pipeline.05_score_and_rank:run:191 | --- SOUTH (577 candidates after all filters) ---
+2026-03-11 08:04:18 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-11 08:04:18 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+ zcta  composite_score  walk_score  fmr_2br_rent
+70116        75.774994        93.0        1362.0
+90014        74.561818        97.0           NaN
+90291        71.485455        95.0           NaN
+93101        69.300909        92.0           NaN
+90404        69.096364        89.0           NaN
+90013        68.065455        95.0           NaN
+91101        67.795455        95.0           NaN
+90401        67.615455        95.0           NaN
+90007        66.510909        92.0           NaN
+30308        66.139321        90.0        1844.0
+2026-03-11 08:04:18 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-11 08:04:18 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-11 08:04:18 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-11 08:04:18 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-11 08:04:18 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 08:04:57 | INFO     | pipeline.06_visualize:run:190 | NORTH: 25 candidates
+2026-03-11 08:04:57 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-11 08:04:57 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 08:05:38 | INFO     | pipeline.06_visualize:run:190 | SOUTH: 25 candidates
+2026-03-11 08:05:38 | SUCCESS  | pipeline.06_visualize:run:198 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-11 08:05:38 | INFO     | pipeline.06_visualize:run:201 | Building combined map…
+2026-03-11 08:05:38 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 08:06:20 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-11 08:07:00 | SUCCESS  | pipeline.06_visualize:run:249 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-11 08:07:00 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 162.3s
+2026-03-11 08:07:00 | SUCCESS  | __main__:main:76 | Pipeline complete in 3.3 minutes.
+2026-03-11 08:07:00 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/

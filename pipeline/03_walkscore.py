@@ -1,95 +1,105 @@
 """
-Step 3: Walk Score + Bike Score
---------------------------------
-Calls the Walk Score API for each candidate ZCTA centroid.
-Results are cached to CSV so re-runs don't re-call the API.
+Step 3: Walk Score + Bike Score (web scraping)
+----------------------------------------------
+Scrapes walk/bike/transit scores from walkscore.com for top candidate ZCTAs.
 
-If WALKSCORE_API_KEY is not set, this step is skipped and walk_score /
-bike_score columns are left as NaN — step 05 will then weight OSM signals
-more heavily.
+Two-pass design:
+  Pass 1 (no prior amenity data): writes NaN scores so later steps can run.
+  Pass 2 (after step 4 has run): does a preliminary OSM-only ranking, scrapes
+    walk/bike scores for the top SCRAPE_TOP_N candidates per region, then
+    writes actual scores.
 
-Outputs (appended columns, written to new files)
+Re-run the pipeline with `--from 3` after an initial full run to trigger
+the scraping pass.
+
+Outputs
 -------
 data/processed/north_walkscored.parquet
 data/processed/south_walkscored.parquet
 """
 
+import re
 import time
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
 import requests
-from dotenv import load_dotenv
 from tqdm import tqdm
 
-import os
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_PROCESSED, WALKSCORE_SLEEP_S, MIN_WALK_SCORE, MIN_BIKE_SCORE
+from loguru import logger
+from config import (
+    DATA_PROCESSED,
+    SCRAPE_TOP_N,
+    SCRAPE_SLEEP_S,
+    MIN_WALK_SCORE,
+    MIN_BIKE_SCORE,
+)
 
-load_dotenv()
-WALKSCORE_API_KEY = os.getenv("WALKSCORE_API_KEY", "")
 
-WALKSCORE_URL = "https://api.walkscore.com/score"
+WALKSCORE_PAGE_URL = "https://www.walkscore.com/score/loc/lat={lat}/lng={lng}"
+
+# Regex patterns to extract scores from SVG badge URLs on the page
+_RE_WALK = re.compile(r"pp\.walk\.sc/badge/walk/score/(\d+)\.svg")
+_RE_BIKE = re.compile(r"pp\.walk\.sc/badge/bike/score/(\d+)\.svg")
+_RE_TRANSIT = re.compile(r"pp\.walk\.sc/badge/transit/score/(\d+)\.svg")
+
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 
-def fetch_walkscore(lat: float, lon: float, address: str = "") -> dict:
-    """Call Walk Score API for a single point. Returns dict with walk/bike scores."""
-    params = {
-        "format": "json",
-        "lat": lat,
-        "lon": lon,
-        "address": address or f"{lat},{lon}",
-        "transit": 1,
-        "bike": 1,
-        "wsapikey": WALKSCORE_API_KEY,
-    }
+def scrape_walkscore(lat: float, lon: float) -> dict:
+    """Scrape walk/bike/transit scores from walkscore.com for a single point."""
+    url = WALKSCORE_PAGE_URL.format(lat=round(lat, 6), lng=round(lon, 6))
     try:
-        resp = requests.get(WALKSCORE_URL, params=params, timeout=10)
+        resp = requests.get(url, headers=_HEADERS, timeout=15)
         resp.raise_for_status()
-        data = resp.json()
-        return {
-            "walk_score": data.get("walkscore"),
-            "walk_description": data.get("description"),
-            "bike_score": data.get("bike", {}).get("score") if data.get("bike") else None,
-            "transit_score": data.get("transit", {}).get("score") if data.get("transit") else None,
+        html = resp.text
+
+        walk_m = _RE_WALK.search(html)
+        bike_m = _RE_BIKE.search(html)
+        transit_m = _RE_TRANSIT.search(html)
+
+        result = {
+            "walk_score": int(walk_m.group(1)) if walk_m else None,
+            "bike_score": int(bike_m.group(1)) if bike_m else None,
+            "transit_score": int(transit_m.group(1)) if transit_m else None,
         }
+
+        if result["walk_score"] is None:
+            logger.debug(f"No walk score found in page for ({lat}, {lon})")
+
+        return result
     except Exception as exc:
-        return {"walk_score": None, "bike_score": None, "transit_score": None,
-                "walk_description": None, "_error": str(exc)}
+        logger.warning(f"Scrape failed for ({lat}, {lon}): {exc}")
+        return {"walk_score": None, "bike_score": None, "transit_score": None}
 
 
-def score_region(gdf: gpd.GeoDataFrame, region: str, cache_path: Path) -> pd.DataFrame:
-    """Fetch Walk/Bike scores for all ZCTAs in a GeoDataFrame, with caching."""
-    df = gdf[["ZCTA5CE20", "centroid_lat", "centroid_lon"]].copy()
-    df = df.rename(columns={"ZCTA5CE20": "zcta"})
+def preliminary_rank(df: pd.DataFrame, n: int) -> pd.DataFrame:
+    """Quick rank using OSM amenity counts to pick top candidates for scraping."""
+    scored = pd.DataFrame(index=df.index)
 
-    # Load existing cache
-    if cache_path.exists():
-        cached = pd.read_parquet(cache_path)
-        done_zips = set(cached["zcta"].astype(str))
-    else:
-        cached = pd.DataFrame()
-        done_zips = set()
+    for col, cap in [("grocery_count", 5), ("cafe_count", 10),
+                     ("restaurant_count", 30), ("pharmacy_count", 3)]:
+        if col in df.columns:
+            s = df[col].astype(float).clip(upper=cap)
+            s_max = s.max()
+            scored[col] = (s / s_max) if s_max > 0 else 0.5
+        else:
+            scored[col] = 0.5
 
-    todo = df[~df["zcta"].astype(str).isin(done_zips)]
-    logger.debug(f"{region}: {len(done_zips)} cached, {len(todo)} to fetch")
-
-    if todo.empty:
-        return cached
-
-    results = []
-    for _, row in tqdm(todo.iterrows(), total=len(todo), desc=f"WalkScore {region}"):
-        scores = fetch_walkscore(row["centroid_lat"], row["centroid_lon"])
-        scores["zcta"] = row["zcta"]
-        results.append(scores)
-        time.sleep(WALKSCORE_SLEEP_S)
-
-    new_df = pd.DataFrame(results)
-    combined = pd.concat([cached, new_df], ignore_index=True)
-    combined.to_parquet(cache_path, index=False)
-    return combined
+    df = df.copy()
+    df["_prelim_score"] = scored.mean(axis=1)
+    top = df.nlargest(n, "_prelim_score")
+    return top.drop(columns=["_prelim_score"])
 
 
 def run() -> None:
@@ -102,43 +112,111 @@ def run() -> None:
     north = gpd.read_file(north_in)
     south = gpd.read_file(south_in)
 
-    if not WALKSCORE_API_KEY:
-        logger.warning(
-            "WALKSCORE_API_KEY not set in .env — skipping Walk Score API calls. "
-            "walk_score and bike_score will be NaN; step 05 will rely on OSM signals only. "
-            "To enable: add WALKSCORE_API_KEY=<your key> to .env"
-        )
-        # Write through with NaN scores so downstream steps work
-        for gdf, region in [(north, "north"), (south, "south")]:
-            out = gdf.drop(columns=["geometry"])
-            out["walk_score"] = float("nan")
-            out["bike_score"] = float("nan")
-            out["transit_score"] = float("nan")
-            out.to_parquet(DATA_PROCESSED / f"{region}_walkscored.parquet", index=False)
-        return
-
     for gdf, region in [(north, "north"), (south, "south")]:
-        cache = DATA_PROCESSED / f"{region}_walkscore_cache.parquet"
-        scores = score_region(gdf, region, cache)
+        amenity_path = DATA_PROCESSED / f"{region}_amenities.parquet"
+        cache_path = DATA_PROCESSED / f"{region}_walkscore_cache.parquet"
 
-        # Merge scores back to full candidate table
-        base = gdf.drop(columns=["geometry"])
-        merged = base.merge(
-            scores[["zcta", "walk_score", "bike_score", "transit_score", "walk_description"]],
-            left_on="ZCTA5CE20", right_on="zcta", how="left"
-        )
+        # Load any previously scraped results
+        if cache_path.exists():
+            cached = pd.read_parquet(cache_path)
+            done_zips = set(cached["zcta"].astype(str))
+        else:
+            cached = pd.DataFrame()
+            done_zips = set()
 
-        # Apply hard filters
-        pre = len(merged)
-        merged = merged[
-            (merged["walk_score"].isna() | (merged["walk_score"] >= MIN_WALK_SCORE)) &
-            (merged["bike_score"].isna() | (merged["bike_score"] >= MIN_BIKE_SCORE))
-        ]
-        logger.info(f"{region.title()}: {pre:,} → {len(merged):,} after Walk/Bike Score filter")
+        if amenity_path.exists() and len(done_zips) < SCRAPE_TOP_N:
+            # --- SCRAPE PASS: amenity data available, do preliminary ranking ---
+            amenity_df = pd.read_parquet(amenity_path)
+
+            # Rank ALL candidates, take top N, then scrape only the uncached ones
+            top = preliminary_rank(amenity_df, SCRAPE_TOP_N)
+            to_scrape = top[~top["ZCTA5CE20"].astype(str).isin(done_zips)]
+
+            logger.info(
+                f"{region.capitalize()}: scraping Walk Score for {len(to_scrape)} candidates "
+                f"({len(done_zips)} already cached, {SCRAPE_TOP_N} target)"
+            )
+
+            results = []
+            for _, row in tqdm(to_scrape.iterrows(), total=len(to_scrape),
+                               desc=f"Scrape {region}"):
+                scores = scrape_walkscore(row["centroid_lat"], row["centroid_lon"])
+                scores["zcta"] = str(row["ZCTA5CE20"])
+                results.append(scores)
+                time.sleep(SCRAPE_SLEEP_S)
+
+            if results:
+                new_df = pd.DataFrame(results)
+                combined = pd.concat([cached, new_df], ignore_index=True)
+                combined.to_parquet(cache_path, index=False)
+                scraped_count = new_df["walk_score"].notna().sum()
+                logger.info(f"Successfully scraped {scraped_count}/{len(new_df)} scores")
+            else:
+                combined = cached
+
+            # Merge scores back to full candidate table
+            base = gdf.drop(columns=["geometry"])
+            if not combined.empty:
+                merged = base.merge(
+                    combined[["zcta", "walk_score", "bike_score", "transit_score"]],
+                    left_on="ZCTA5CE20", right_on="zcta", how="left"
+                ).drop(columns=["zcta"], errors="ignore")
+            else:
+                merged = base
+                merged["walk_score"] = float("nan")
+                merged["bike_score"] = float("nan")
+                merged["transit_score"] = float("nan")
+
+            # Apply hard filters only to candidates that have scores
+            pre = len(merged)
+            merged = merged[
+                (merged["walk_score"].isna() | (merged["walk_score"] >= MIN_WALK_SCORE)) &
+                (merged["bike_score"].isna() | (merged["bike_score"] >= MIN_BIKE_SCORE))
+            ]
+            dropped = pre - len(merged)
+            if dropped:
+                logger.info(
+                    f"{region.capitalize()}: dropped {dropped} ZCTAs below "
+                    f"Walk Score {MIN_WALK_SCORE} / Bike Score {MIN_BIKE_SCORE}"
+                )
+
+        elif not cached.empty:
+            # --- CACHED PASS: use existing scraped data ---
+            logger.info(
+                f"{region.capitalize()}: using {len(cached)} cached Walk Score results"
+            )
+            base = gdf.drop(columns=["geometry"])
+            merged = base.merge(
+                cached[["zcta", "walk_score", "bike_score", "transit_score"]],
+                left_on="ZCTA5CE20", right_on="zcta", how="left"
+            ).drop(columns=["zcta"], errors="ignore")
+
+            pre = len(merged)
+            merged = merged[
+                (merged["walk_score"].isna() | (merged["walk_score"] >= MIN_WALK_SCORE)) &
+                (merged["bike_score"].isna() | (merged["bike_score"] >= MIN_BIKE_SCORE))
+            ]
+            dropped = pre - len(merged)
+            if dropped:
+                logger.info(
+                    f"{region.capitalize()}: dropped {dropped} ZCTAs below "
+                    f"Walk Score {MIN_WALK_SCORE} / Bike Score {MIN_BIKE_SCORE}"
+                )
+
+        else:
+            # --- PASS-THROUGH: no data yet, write NaN scores ---
+            logger.info(
+                f"{region.capitalize()}: no amenity data yet — writing NaN walk/bike scores. "
+                f"Re-run from step 3 after initial pipeline run to scrape actual scores."
+            )
+            merged = gdf.drop(columns=["geometry"])
+            merged["walk_score"] = float("nan")
+            merged["bike_score"] = float("nan")
+            merged["transit_score"] = float("nan")
 
         out_path = DATA_PROCESSED / f"{region}_walkscored.parquet"
         merged.to_parquet(out_path, index=False)
-        logger.success(f"Saved {out_path}")
+        logger.success(f"Saved {out_path} ({len(merged):,} candidates)")
 
 
 if __name__ == "__main__":

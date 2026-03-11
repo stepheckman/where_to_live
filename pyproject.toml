@@ -19,6 +19,7 @@ dependencies = [
     "openpyxl>=3.1", # read Zillow / HUD Excel files
     "streamlit>=1.55.0",
     "loguru>=0.7.3",
+    "fiona>=1.10.1",
 ]
 
 [tool.uv]

@@ -28,7 +28,7 @@ from config import (
     DATA_PROCESSED,
     OUTPUTS,
     TOP_N,
-    W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY,
+    W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY, W_HIKING,
     W_HOME_VALUE, W_RENT,
     CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY,
     MIN_WALK_SCORE, MIN_BIKE_SCORE,
@@ -74,6 +74,20 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
     df["n_restaurant"] = normalize_col(df.get("restaurant_count"), cap=CAP_RESTAURANT)
     df["n_pharmacy"]   = normalize_col(df.get("pharmacy_count"), cap=CAP_PHARMACY)
 
+    # Hiking: combine distance (inverted) and count signals equally
+    has_hiking = (
+        "dist_nearest_park_km" in df.columns and
+        df["dist_nearest_park_km"].notna().any()
+    )
+    if has_hiking:
+        n_dist = normalize_col(df["dist_nearest_park_km"], invert=True)
+        n_count = normalize_col(df.get("parks_within_50km"))
+        df["n_hiking"] = (n_dist.fillna(0.5) + n_count.fillna(0.5)) / 2
+        hiking_weight = W_HIKING
+    else:
+        df["n_hiking"] = np.nan
+        hiking_weight = 0.0
+
     if region == "north" and "zhvi_latest" in df.columns:
         df["n_affordability"] = normalize_col(df["zhvi_latest"], invert=True)
         affordability_weight = W_HOME_VALUE
@@ -88,7 +102,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
     if not has_walkscore:
         w_walk = 0.0
         w_bike = 0.0
-        # Redistribute 0.45 (walk + bike) proportionally to OSM signals
+        # Redistribute walk+bike weight proportionally to OSM signals
         total_osm_base = W_GROCERY + W_CAFE + W_RESTAURANT + W_PHARMACY
         scale = (W_WALK + W_BIKE + total_osm_base) / total_osm_base
         w_grocery    = W_GROCERY    * scale
@@ -103,16 +117,19 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         w_restaurant = W_RESTAURANT
         w_pharmacy   = W_PHARMACY
 
-    # Affordability: reduce from other weights proportionally
-    if affordability_weight > 0 and df["n_affordability"].notna().any():
-        scale_factor = 1.0 - affordability_weight
+    # Scale down base weights to make room for hiking and affordability
+    fixed_weight = hiking_weight + affordability_weight
+    if fixed_weight > 0:
+        scale_factor = 1.0 - fixed_weight
         w_walk       *= scale_factor
         w_bike       *= scale_factor
         w_grocery    *= scale_factor
         w_cafe       *= scale_factor
         w_restaurant *= scale_factor
         w_pharmacy   *= scale_factor
-    else:
+    if not has_hiking:
+        hiking_weight = 0.0
+    if not (affordability_weight > 0 and df["n_affordability"].notna().any()):
         affordability_weight = 0.0
 
     def safe_fill(col: pd.Series, default: float = 0.5) -> pd.Series:
@@ -120,12 +137,13 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         return col.fillna(default)
 
     df["composite_score"] = (
-        w_walk       * safe_fill(df["n_walk"])           +
-        w_bike       * safe_fill(df["n_bike"])           +
-        w_grocery    * safe_fill(df["n_grocery"])        +
-        w_cafe       * safe_fill(df["n_cafe"])           +
-        w_restaurant * safe_fill(df["n_restaurant"])     +
-        w_pharmacy   * safe_fill(df["n_pharmacy"])       +
+        w_walk           * safe_fill(df["n_walk"])           +
+        w_bike           * safe_fill(df["n_bike"])           +
+        w_grocery        * safe_fill(df["n_grocery"])        +
+        w_cafe           * safe_fill(df["n_cafe"])           +
+        w_restaurant     * safe_fill(df["n_restaurant"])     +
+        w_pharmacy       * safe_fill(df["n_pharmacy"])       +
+        hiking_weight    * safe_fill(df["n_hiking"])         +
         affordability_weight * safe_fill(df["n_affordability"])
     ) * 100  # scale to 0–100
 
@@ -145,6 +163,8 @@ def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "cafe_count": "cafe_count",
         "restaurant_count": "restaurant_count",
         "pharmacy_count": "pharmacy_count",
+        "dist_nearest_park_km": "dist_nearest_park_km",
+        "parks_within_50km": "parks_within_50km",
         "nearest_airport": "nearest_airport",
         "airport_drive_min_approx": "airport_drive_min",
         "composite_score": "composite_score",
