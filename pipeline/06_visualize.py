@@ -77,7 +77,7 @@ def format_currency(val: float, prefix: str = "$") -> str:
 
 
 def build_popup(row: pd.Series, region: str) -> str:
-    """Build an HTML popup string for a candidate ZCTA."""
+    """Build an HTML popup string for a candidate block group."""
     gmaps_url = f"https://www.google.com/maps/search/?api=1&query={row['lat']},{row['lon']}"
     sv_url = (
         f"https://www.google.com/maps/@?api=1&map_action=pano"
@@ -109,9 +109,11 @@ def build_popup(row: pd.Series, region: str) -> str:
     city = row.get("city", "") or ""
     city_line = f'<div style="font-size:13px; color:#555; margin-bottom:4px;">{city}</div>' if city else ""
 
+    geoid = row.get("geoid", "")
+
     return f"""
     <div style="font-family: sans-serif; width: 280px;">
-      <h4 style="margin:0 0 2px 0;">ZCTA {row['zcta']}</h4>
+      <h4 style="margin:0 0 2px 0;">BG {geoid}</h4>
       {city_line}
       <table style="border-collapse: collapse; width: 100%;">
         <tr style="background:#f5f5f5;">
@@ -162,6 +164,7 @@ def make_map(df: pd.DataFrame, region: str, center_lat: float, center_lon: float
     for _, row in df.iterrows():
         color = score_to_color(row["composite_score"])
         popup_html = build_popup(row, region)
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9,
@@ -171,7 +174,7 @@ def make_map(df: pd.DataFrame, region: str, center_lat: float, center_lon: float
             fill_color=color,
             fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"{row.get('city') or ('ZCTA ' + str(row['zcta']))} — Score: {row['composite_score']:.1f}",
+            tooltip=f"{row.get('city') or ('BG ' + str(geoid))} — Score: {row['composite_score']:.1f}",
         ).add_to(m)
 
     return m
@@ -205,7 +208,6 @@ def run() -> None:
     south_df = add_city_column(south_df)
     north_df["region"] = "north"
     south_df["region"] = "south"
-    combined = pd.concat([north_df, south_df], ignore_index=True)
 
     center_lat = 38.0   # roughly mid-US
     center_lon = -95.0
@@ -221,23 +223,25 @@ def run() -> None:
     for _, row in north_df.iterrows():
         color = score_to_color(row["composite_score"])
         popup_html = build_popup(row, "north")
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=color, fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"[N] {row.get('city') or ('ZCTA ' + str(row['zcta']))} — {row['composite_score']:.1f}",
+            tooltip=f"[N] {row.get('city') or ('BG ' + str(geoid))} — {row['composite_score']:.1f}",
         ).add_to(north_group)
 
     for _, row in south_df.iterrows():
         color = score_to_color(row["composite_score"])
         popup_html = build_popup(row, "south")
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=color, fill_opacity=0.85,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"[S] {row.get('city') or ('ZCTA ' + str(row['zcta']))} — {row['composite_score']:.1f}",
+            tooltip=f"[S] {row.get('city') or ('BG ' + str(geoid))} — {row['composite_score']:.1f}",
         ).add_to(south_group)
 
     north_group.add_to(m_combined)

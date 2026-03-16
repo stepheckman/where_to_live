@@ -85,7 +85,7 @@ if north_raw is None or south_raw is None:
 # Data availability callout
 _missing = []
 if north_raw["walk_score"].isna().all():
-    _missing.append("**Walk/Bike scores** (set `WALKSCORE_API_KEY` and re-run step 3)")
+    _missing.append("**Walk/Bike scores** (re-run step 3 after step 4 to scrape)")
 if "fmr_2br" not in south_raw.columns:
     _missing.append("**South rent data** (re-run step 4 to fetch HUD FMR)")
 if _missing:
@@ -100,7 +100,7 @@ if _missing:
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.header("Hard Filters")
-    st.caption("ZCTAs that fail these thresholds are dropped before scoring.")
+    st.caption("Block groups that fail these thresholds are dropped before scoring.")
 
     min_walk = st.slider("Min Walk Score", 0, 100, MIN_WALK_SCORE, step=5)
     min_bike = st.slider("Min Bike Score", 0, 100, MIN_BIKE_SCORE, step=5)
@@ -231,7 +231,7 @@ def score_and_filter(
     else:
         df["n_hiking"] = pd.Series(np.nan, index=df.index)
 
-    afford_col = "zhvi_latest" if region == "north" else "fmr_2br"
+    afford_col = "median_home_value" if region == "north" else "fmr_2br"
     df["n_afford"] = (
         _normalize(df[afford_col], invert=True)
         if afford_col in df.columns
@@ -268,13 +268,13 @@ def score_and_filter(
 
 def _rename_for_display(df: pd.DataFrame, region: str) -> pd.DataFrame:
     renames = {
-        "ZCTA5CE20": "zcta",
+        "GEOID": "geoid",
         "centroid_lat": "lat",
         "centroid_lon": "lon",
         "airport_drive_min_approx": "airport_drive_min",
     }
     if region == "north":
-        renames["zhvi_latest"] = "median_home_value"
+        renames["median_home_value"] = "median_home_value"
     else:
         renames["fmr_2br"] = "fmr_2br_rent"
     present = {k: v for k, v in renames.items() if k in df.columns}
@@ -314,9 +314,11 @@ def _build_popup(row: pd.Series, region: str) -> str:
     drive = row.get("airport_drive_min")
     airport_str = f"{airport} (~{drive:.0f} min)" if pd.notna(drive) else str(airport)
 
+    geoid = row.get("geoid", "")
+
     return f"""
     <div style="font-family:sans-serif;width:280px;">
-      <h4 style="margin:0 0 6px 0;">ZCTA {row['zcta']}</h4>
+      <h4 style="margin:0 0 6px 0;">BG {geoid}</h4>
       <table style="border-collapse:collapse;width:100%;">
         <tr style="background:#f5f5f5;">
           <td colspan="2" style="padding:4px 6px;font-weight:bold;font-size:15px;">
@@ -363,6 +365,7 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
     )
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
     for _, row in df.iterrows():
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9,
@@ -372,7 +375,7 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
             fill_color=_score_color(row["composite_score"]),
             fill_opacity=0.85,
             popup=folium.Popup(_build_popup(row, region), max_width=300),
-            tooltip=f"ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+            tooltip=f"BG {geoid} — {row['composite_score']:.1f}",
         ).add_to(m)
     return m._repr_html_()
 
@@ -391,21 +394,23 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
     south_group = folium.FeatureGroup(name="South — rent", show=True)
 
     for _, row in north_df.iterrows():
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
             popup=folium.Popup(_build_popup(row, "north"), max_width=300),
-            tooltip=f"[N] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+            tooltip=f"[N] BG {geoid} — {row['composite_score']:.1f}",
         ).add_to(north_group)
 
     for _, row in south_df.iterrows():
+        geoid = row.get("geoid", "")
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
             popup=folium.Popup(_build_popup(row, "south"), max_width=300),
-            tooltip=f"[S] ZCTA {row['zcta']} — {row['composite_score']:.1f}",
+            tooltip=f"[S] BG {geoid} — {row['composite_score']:.1f}",
         ).add_to(south_group)
 
     north_group.add_to(m)
@@ -419,13 +424,13 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
 # ---------------------------------------------------------------------------
 DISPLAY_COLS = {
     "north": [
-        "zcta", "composite_score", "walk_score", "bike_score",
+        "geoid", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "nearest_airport", "airport_drive_min",
     ],
     "south": [
-        "zcta", "composite_score", "walk_score", "bike_score",
+        "geoid", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "dist_nearest_park_km", "parks_within_50km",
         "fmr_2br_rent", "nearest_airport", "airport_drive_min",

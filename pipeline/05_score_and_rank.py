@@ -4,11 +4,11 @@ Step 5: Composite Scoring and Ranking
 Normalizes all signals to [0, 1], applies weights from config.py,
 and produces the final ranked candidate lists.
 
-For north (buying): home value (Zillow ZHVI) is scored inversely —
+For north (buying): home value (Census ACS B25077) is scored inversely —
   lower value → higher score, since affordability matters.
 For south (renting): FMR 2BR rent is scored inversely for the same reason.
 
-If Walk Score is missing (no API key), weights are redistributed to OSM signals.
+If Walk Score is missing (not yet scraped), weights are redistributed to OSM signals.
 
 Outputs
 -------
@@ -88,8 +88,8 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         df["n_hiking"] = np.nan
         hiking_weight = 0.0
 
-    if region == "north" and "zhvi_latest" in df.columns:
-        df["n_affordability"] = normalize_col(df["zhvi_latest"], invert=True)
+    if region == "north" and "median_home_value" in df.columns:
+        df["n_affordability"] = normalize_col(df["median_home_value"], invert=True)
         affordability_weight = W_HOME_VALUE
     elif region == "south" and "fmr_2br" in df.columns:
         df["n_affordability"] = normalize_col(df["fmr_2br"], invert=True)
@@ -153,7 +153,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
 def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
     """Select and rename columns for the final output CSV."""
     cols = {
-        "ZCTA5CE20": "zcta",
+        "GEOID": "geoid",
         "centroid_lat": "lat",
         "centroid_lon": "lon",
         "walk_score": "walk_score",
@@ -170,7 +170,7 @@ def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "composite_score": "composite_score",
     }
     if region == "north":
-        cols["zhvi_latest"] = "median_home_value"
+        cols["median_home_value"] = "median_home_value"
     elif region == "south":
         cols["fmr_2br"] = "fmr_2br_rent"
 
@@ -197,7 +197,7 @@ def run() -> None:
         top.to_csv(out_path, index=False)
 
         logger.success(f"Top {len(top)} {region} candidates saved to {out_path}")
-        logger.debug("\n" + top[["zcta", "composite_score"] +
+        logger.debug("\n" + top[["geoid", "composite_score"] +
               (["walk_score"] if "walk_score" in top.columns else []) +
               (["median_home_value"] if "median_home_value" in top.columns else []) +
               (["fmr_2br_rent"] if "fmr_2br_rent" in top.columns else [])

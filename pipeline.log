@@ -329,3 +329,948 @@
 2026-03-11 08:07:00 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 162.3s
 2026-03-11 08:07:00 | SUCCESS  | __main__:main:76 | Pipeline complete in 3.3 minutes.
 2026-03-11 08:07:00 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-12 06:18:13 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-12 06:18:13 | INFO     | __main__:main:69 | Running 6 pipeline step(s)…
+2026-03-12 06:18:13 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-12 06:18:13 | INFO     | __main__:run_step:39 | STEP 1: Geographic pre-filter (block group lat bands + population density)
+2026-03-12 06:18:13 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-12 06:18:14 | INFO     | pipeline.01_geo_filter:run:197 | Downloading block groups for 49 states
+2026-03-12 06:19:01 | SUCCESS  | pipeline.01_geo_filter:download_bg_shapefiles:150 | Cached 238,194 block groups to /Users/steph/code/where_to_live/data/raw/bg_2023.parquet
+2026-03-12 06:19:02 | INFO     | pipeline.01_geo_filter:run:201 | 238,194 block groups loaded
+2026-03-12 06:19:09 | INFO     | pipeline.01_geo_filter:fetch_acs_population:161 | Fetching ACS population data for block groups…
+2026-03-12 06:19:50 | DEBUG    | pipeline.01_geo_filter:fetch_acs_population:188 | Cached population for 238,194 block groups
+2026-03-12 06:19:50 | INFO     | pipeline.01_geo_filter:run:231 | North (38.0°–49.0°N, ≥2000 ppl/mi²): 71,977 block groups
+2026-03-12 06:19:50 | INFO     | pipeline.01_geo_filter:run:235 | South (25.0°–35.0°N, ≥2000 ppl/mi²): 41,697 block groups
+2026-03-12 06:20:00 | SUCCESS  | pipeline.01_geo_filter:run:245 | Saved: /Users/steph/code/where_to_live/data/processed/north_candidates_geo.geojson  |  /Users/steph/code/where_to_live/data/processed/south_candidates_geo.geojson
+2026-03-12 06:20:01 | SUCCESS  | __main__:run_step:45 | Step 1 complete in 107.8s
+2026-03-12 06:20:01 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-12 06:20:01 | INFO     | __main__:run_step:39 | STEP 2: Airport proximity filter (60-min drive isochrones)
+2026-03-12 06:20:01 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-12 06:20:01 | INFO     | pipeline.02_airport_proximity:run:209 | Loading geo-filtered candidates…
+2026-03-12 06:20:08 | INFO     | pipeline.02_airport_proximity:run:212 | North: 71,977 block groups  |  South: 41,697 block groups
+2026-03-12 06:20:08 | DEBUG    | pipeline.02_airport_proximity:fetch_faa_airports:63 | FAA airport data already cached.
+2026-03-12 06:20:08 | INFO     | pipeline.02_airport_proximity:run:215 | Building 60-min drive isochrones for 458 airports…
+2026-03-12 06:20:08 | INFO     | pipeline.02_airport_proximity:run:226 | Filtering north block groups by airport proximity…
+2026-03-12 06:20:09 | INFO     | pipeline.02_airport_proximity:run:228 | North: 71,977 → 65,916 block groups within 60 min of a commercial airport
+2026-03-12 06:20:09 | INFO     | pipeline.02_airport_proximity:run:230 | Filtering south block groups by airport proximity…
+2026-03-12 06:20:09 | INFO     | pipeline.02_airport_proximity:run:232 | South: 41,697 → 39,252 block groups within 60 min of a commercial airport
+2026-03-12 06:20:18 | SUCCESS  | pipeline.02_airport_proximity:run:238 | Saved: /Users/steph/code/where_to_live/data/processed/north_airport_filtered.geojson  |  /Users/steph/code/where_to_live/data/processed/south_airport_filtered.geojson
+2026-03-12 06:20:18 | SUCCESS  | __main__:run_step:45 | Step 2 complete in 17.0s
+2026-03-12 06:20:18 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-12 06:20:18 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for all candidates)
+2026-03-12 06:20:18 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-12 06:26:06 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-12 06:26:06 | INFO     | __main__:main:69 | Running 4 pipeline step(s)…
+2026-03-12 06:26:06 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-12 06:26:06 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for all candidates)
+2026-03-12 06:26:06 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-12 06:26:13 | INFO     | pipeline.03_walkscore:run:119 | North: scraping Walk Score for 949 candidates (0 already cached)
+2026-03-12 06:29:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.601610778692304, -73.76177980561356): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.601611/lng=-73.76178
+2026-03-12 06:33:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.674333509224276, -74.22499216394668): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.674334/lng=-74.224992
+2026-03-12 06:37:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.83066961645143, -73.90816092350211): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.83067/lng=-73.908161
+2026-03-12 06:38:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8427381449766, -73.87890080860876): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.842738/lng=-73.878901
+2026-03-12 06:41:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.863612993846594, -73.98984058498667): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.863613/lng=-73.989841
+2026-03-12 06:42:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.37033103102929, -71.08207470470353): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.370331/lng=-71.082075
+2026-03-12 06:43:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.76036358945296, -73.79652556351182): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.760364/lng=-73.796526
+2026-03-12 06:46:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.68458579087261, -73.84971278314543): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.684586/lng=-73.849713
+2026-03-12 06:52:59 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.26649207892336, -71.01601329041844): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.266492/lng=-71.016013
+2026-03-12 06:55:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.060391505443555, -89.39862365159577): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.060392/lng=-89.398624
+2026-03-12 06:58:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.447732725397586, -122.20204681816931): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.447733/lng=-122.202047
+2026-03-12 06:59:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.27792182430561, -83.26534574361804): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.277922/lng=-83.265346
+2026-03-12 07:00:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7364074438913, -73.72235718318123): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.736407/lng=-73.722357
+2026-03-12 07:03:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.67815586680916, -74.28890327865466): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.678156/lng=-74.288903
+2026-03-12 07:11:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.691615756175686, -73.65073584921082): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=40.691616/lng=-73.650736
+2026-03-12 07:18:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.50350256457299, -71.06556114149643): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=42.503503/lng=-71.065561
+2026-03-12 07:20:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.62832623301468, -87.73537371146612): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.628326/lng=-87.735374
+2026-03-12 07:26:16 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.651716125925056, -74.34325409278291): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=40.651716/lng=-74.343254
+2026-03-12 07:28:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.04848720774407, -83.07161818568302): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=40.048487/lng=-83.071618
+2026-03-12 07:28:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.280192143618216, -83.17813882389785): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=42.280192/lng=-83.178139
+2026-03-12 07:50:10 | INFO     | pipeline.03_walkscore:run:137 | Successfully scraped 929/949 scores
+2026-03-12 07:50:10 | SUCCESS  | pipeline.03_walkscore:run:203 | Saved /Users/steph/code/where_to_live/data/processed/north_walkscored.parquet (65,916 candidates)
+2026-03-12 07:50:10 | INFO     | pipeline.03_walkscore:run:119 | South: scraping Walk Score for 577 candidates (0 already cached)
+2026-03-12 08:21:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8680958121733, -84.46481216171938): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.868096/lng=-84.464812
+2026-03-12 08:38:54 | INFO     | pipeline.03_walkscore:run:137 | Successfully scraped 576/577 scores
+2026-03-12 08:38:54 | SUCCESS  | pipeline.03_walkscore:run:203 | Saved /Users/steph/code/where_to_live/data/processed/south_walkscored.parquet (39,252 candidates)
+2026-03-12 08:38:54 | SUCCESS  | __main__:run_step:45 | Step 3 complete in 7968.2s
+2026-03-12 08:38:54 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-12 08:38:54 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / HUD FMR)
+2026-03-12 08:38:54 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-12 08:38:55 | INFO     | pipeline.04_osm_amenities:run:430 | --- NORTH (65,916 candidates) ---
+2026-03-12 08:38:55 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:121 | north: 0 cached, 65916 to fetch via Overpass
+2026-03-13 07:10:59 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-13 07:10:59 | INFO     | __main__:main:69 | Running 1 pipeline step(s)…
+2026-03-13 07:10:59 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-13 07:10:59 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / HUD FMR)
+2026-03-13 07:10:59 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-13 07:10:59 | INFO     | pipeline.04_osm_amenities:run:653 | --- NORTH (65,916 candidates) ---
+2026-03-13 07:10:59 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:330 | north: 0 cached, 65916 remaining
+2026-03-13 07:10:59 | INFO     | pipeline.04_osm_amenities:fetch_amenities_for_region:337 | north: downloading PBFs for 36 states
+2026-03-13 07:10:59 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading california-latest.osm.pbf …
+2026-03-13 07:12:23 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded california-latest.osm.pbf (1299 MB)
+2026-03-13 07:12:23 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading colorado-latest.osm.pbf …
+2026-03-13 07:12:41 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded colorado-latest.osm.pbf (363 MB)
+2026-03-13 07:12:41 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading connecticut-latest.osm.pbf …
+2026-03-13 07:12:53 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded connecticut-latest.osm.pbf (213 MB)
+2026-03-13 07:12:53 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading delaware-latest.osm.pbf …
+2026-03-13 07:12:55 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded delaware-latest.osm.pbf (21 MB)
+2026-03-13 07:12:55 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading district-of-columbia-latest.osm.pbf …
+2026-03-13 07:12:58 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded district-of-columbia-latest.osm.pbf (21 MB)
+2026-03-13 07:12:58 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading idaho-latest.osm.pbf …
+2026-03-13 07:13:05 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded idaho-latest.osm.pbf (123 MB)
+2026-03-13 07:13:05 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading illinois-latest.osm.pbf …
+2026-03-13 07:13:23 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded illinois-latest.osm.pbf (344 MB)
+2026-03-13 07:13:23 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading indiana-latest.osm.pbf …
+2026-03-13 07:13:54 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded indiana-latest.osm.pbf (190 MB)
+2026-03-13 07:13:54 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading iowa-latest.osm.pbf …
+2026-03-13 07:14:02 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded iowa-latest.osm.pbf (130 MB)
+2026-03-13 07:14:02 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading kansas-latest.osm.pbf …
+2026-03-13 07:14:10 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded kansas-latest.osm.pbf (108 MB)
+2026-03-13 07:14:10 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading kentucky-latest.osm.pbf …
+2026-03-13 07:14:19 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded kentucky-latest.osm.pbf (151 MB)
+2026-03-13 07:14:19 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading maine-latest.osm.pbf …
+2026-03-13 07:14:25 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded maine-latest.osm.pbf (89 MB)
+2026-03-13 07:14:25 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading maryland-latest.osm.pbf …
+2026-03-13 07:14:36 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded maryland-latest.osm.pbf (209 MB)
+2026-03-13 07:14:36 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading massachusetts-latest.osm.pbf …
+2026-03-13 07:14:53 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded massachusetts-latest.osm.pbf (305 MB)
+2026-03-13 07:14:53 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading michigan-latest.osm.pbf …
+2026-03-13 07:15:09 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded michigan-latest.osm.pbf (302 MB)
+2026-03-13 07:15:09 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading minnesota-latest.osm.pbf …
+2026-03-13 07:15:23 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded minnesota-latest.osm.pbf (271 MB)
+2026-03-13 07:15:23 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading missouri-latest.osm.pbf …
+2026-03-13 07:15:34 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded missouri-latest.osm.pbf (187 MB)
+2026-03-13 07:15:34 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading montana-latest.osm.pbf …
+2026-03-13 07:15:40 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded montana-latest.osm.pbf (98 MB)
+2026-03-13 07:15:40 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading nebraska-latest.osm.pbf …
+2026-03-13 07:15:48 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded nebraska-latest.osm.pbf (95 MB)
+2026-03-13 07:15:48 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading nevada-latest.osm.pbf …
+2026-03-13 07:15:56 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded nevada-latest.osm.pbf (120 MB)
+2026-03-13 07:15:56 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading new-hampshire-latest.osm.pbf …
+2026-03-13 07:16:00 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded new-hampshire-latest.osm.pbf (69 MB)
+2026-03-13 07:16:00 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading new-jersey-latest.osm.pbf …
+2026-03-13 07:16:10 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded new-jersey-latest.osm.pbf (160 MB)
+2026-03-13 07:16:10 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading new-york-latest.osm.pbf …
+2026-03-13 07:16:41 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded new-york-latest.osm.pbf (488 MB)
+2026-03-13 07:16:41 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading north-dakota-latest.osm.pbf …
+2026-03-13 07:16:50 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded north-dakota-latest.osm.pbf (126 MB)
+2026-03-13 07:16:50 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading ohio-latest.osm.pbf …
+2026-03-13 07:17:08 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded ohio-latest.osm.pbf (307 MB)
+2026-03-13 07:17:08 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading oregon-latest.osm.pbf …
+2026-03-13 07:17:22 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded oregon-latest.osm.pbf (247 MB)
+2026-03-13 07:17:22 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading pennsylvania-latest.osm.pbf …
+2026-03-13 07:17:44 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded pennsylvania-latest.osm.pbf (331 MB)
+2026-03-13 07:17:44 | DEBUG    | pipeline.04_osm_amenities:_download_state_pbf:129 | PBF cached: rhode-island-latest.osm.pbf
+2026-03-13 07:17:44 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading south-dakota-latest.osm.pbf …
+2026-03-13 07:17:48 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded south-dakota-latest.osm.pbf (45 MB)
+2026-03-13 07:17:48 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading utah-latest.osm.pbf …
+2026-03-13 07:17:57 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded utah-latest.osm.pbf (161 MB)
+2026-03-13 07:17:57 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading vermont-latest.osm.pbf …
+2026-03-13 07:18:00 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded vermont-latest.osm.pbf (45 MB)
+2026-03-13 07:18:00 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading virginia-latest.osm.pbf …
+2026-03-13 07:18:23 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded virginia-latest.osm.pbf (421 MB)
+2026-03-13 07:18:23 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading washington-latest.osm.pbf …
+2026-03-13 07:18:43 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded washington-latest.osm.pbf (352 MB)
+2026-03-13 07:18:43 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading west-virginia-latest.osm.pbf …
+2026-03-13 07:18:49 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded west-virginia-latest.osm.pbf (96 MB)
+2026-03-13 07:18:49 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading wisconsin-latest.osm.pbf …
+2026-03-13 07:19:05 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded wisconsin-latest.osm.pbf (287 MB)
+2026-03-13 07:19:05 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading wyoming-latest.osm.pbf …
+2026-03-13 07:19:11 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded wyoming-latest.osm.pbf (91 MB)
+2026-03-13 07:19:11 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from california-latest.osm.pbf …
+2026-03-13 07:23:38 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 06: 64,593 POIs cached
+2026-03-13 07:23:38 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from colorado-latest.osm.pbf …
+2026-03-13 07:24:57 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 08: 12,600 POIs cached
+2026-03-13 07:24:57 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from connecticut-latest.osm.pbf …
+2026-03-13 07:25:38 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 09: 5,161 POIs cached
+2026-03-13 07:25:38 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from delaware-latest.osm.pbf …
+2026-03-13 07:25:42 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 10: 1,510 POIs cached
+2026-03-13 07:25:42 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from district-of-columbia-latest.osm.pbf …
+2026-03-13 07:25:45 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 11: 2,510 POIs cached
+2026-03-13 07:25:45 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from idaho-latest.osm.pbf …
+2026-03-13 07:26:10 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 16: 3,101 POIs cached
+2026-03-13 07:26:10 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from illinois-latest.osm.pbf …
+2026-03-13 07:27:25 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 17: 20,255 POIs cached
+2026-03-13 07:27:25 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from indiana-latest.osm.pbf …
+2026-03-13 07:28:08 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 18: 8,845 POIs cached
+2026-03-13 07:28:08 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from iowa-latest.osm.pbf …
+2026-03-13 07:28:36 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 19: 5,178 POIs cached
+2026-03-13 07:28:36 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from kansas-latest.osm.pbf …
+2026-03-13 07:28:58 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 20: 4,426 POIs cached
+2026-03-13 07:28:58 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from kentucky-latest.osm.pbf …
+2026-03-13 07:29:29 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 21: 6,040 POIs cached
+2026-03-13 07:29:29 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from maine-latest.osm.pbf …
+2026-03-13 07:29:48 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 23: 2,652 POIs cached
+2026-03-13 07:29:48 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from maryland-latest.osm.pbf …
+2026-03-13 07:30:32 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 24: 10,191 POIs cached
+2026-03-13 07:30:32 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from massachusetts-latest.osm.pbf …
+2026-03-13 07:31:33 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 25: 10,433 POIs cached
+2026-03-13 07:31:33 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from michigan-latest.osm.pbf …
+2026-03-13 07:32:44 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 26: 15,404 POIs cached
+2026-03-13 07:32:44 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from minnesota-latest.osm.pbf …
+2026-03-13 07:33:43 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 27: 8,478 POIs cached
+2026-03-13 07:33:43 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from missouri-latest.osm.pbf …
+2026-03-13 07:34:21 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 29: 8,368 POIs cached
+2026-03-13 07:34:21 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from montana-latest.osm.pbf …
+2026-03-13 07:34:42 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 30: 2,706 POIs cached
+2026-03-13 07:34:42 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from nebraska-latest.osm.pbf …
+2026-03-13 07:35:03 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 31: 3,231 POIs cached
+2026-03-13 07:35:03 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from nevada-latest.osm.pbf …
+2026-03-13 07:35:35 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 32: 5,240 POIs cached
+2026-03-13 07:35:35 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from new-hampshire-latest.osm.pbf …
+2026-03-13 07:35:49 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 33: 3,002 POIs cached
+2026-03-13 07:35:49 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from new-jersey-latest.osm.pbf …
+2026-03-13 07:36:21 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 34: 12,106 POIs cached
+2026-03-13 07:36:21 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from new-york-latest.osm.pbf …
+2026-03-13 07:37:52 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 36: 34,574 POIs cached
+2026-03-13 07:37:52 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from north-dakota-latest.osm.pbf …
+2026-03-13 07:38:16 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 38: 1,024 POIs cached
+2026-03-13 07:38:16 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from ohio-latest.osm.pbf …
+2026-03-13 07:39:21 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 39: 19,079 POIs cached
+2026-03-13 07:39:21 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from oregon-latest.osm.pbf …
+2026-03-13 07:40:10 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 41: 11,250 POIs cached
+2026-03-13 07:40:10 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from pennsylvania-latest.osm.pbf …
+2026-03-13 07:41:17 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 42: 20,100 POIs cached
+2026-03-13 07:41:17 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from south-dakota-latest.osm.pbf …
+2026-03-13 07:41:27 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 46: 1,639 POIs cached
+2026-03-13 07:41:27 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from utah-latest.osm.pbf …
+2026-03-13 07:42:05 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 49: 6,333 POIs cached
+2026-03-13 07:42:05 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from vermont-latest.osm.pbf …
+2026-03-13 07:42:15 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 50: 1,393 POIs cached
+2026-03-13 07:42:15 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from virginia-latest.osm.pbf …
+2026-03-13 07:43:40 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 51: 16,614 POIs cached
+2026-03-13 07:43:40 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from washington-latest.osm.pbf …
+2026-03-13 07:44:56 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 53: 18,389 POIs cached
+2026-03-13 07:44:56 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from west-virginia-latest.osm.pbf …
+2026-03-13 07:45:23 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 54: 2,778 POIs cached
+2026-03-13 07:45:23 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from wisconsin-latest.osm.pbf …
+2026-03-13 07:46:25 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 55: 10,855 POIs cached
+2026-03-13 07:46:25 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from wyoming-latest.osm.pbf …
+2026-03-13 07:46:48 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 56: 1,084 POIs cached
+2026-03-13 07:46:48 | INFO     | pipeline.04_osm_amenities:_count_pois_spatial:203 | Total POIs across 36 states: 362,675
+2026-03-13 07:46:49 | INFO     | pipeline.04_osm_amenities:_count_pois_spatial:228 | Spatial join: counting POIs per candidate …
+2026-03-13 07:46:50 | INFO     | pipeline.04_osm_amenities:run:669 | Amenity hard filter: 65,916 → 28,260 block groups
+2026-03-13 07:46:50 | INFO     | pipeline.04_osm_amenities:run:653 | --- SOUTH (39,252 candidates) ---
+2026-03-13 07:46:50 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:330 | south: 0 cached, 39252 remaining
+2026-03-13 07:46:50 | INFO     | pipeline.04_osm_amenities:fetch_amenities_for_region:337 | south: downloading PBFs for 14 states
+2026-03-13 07:46:50 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading alabama-latest.osm.pbf …
+2026-03-13 07:47:01 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded alabama-latest.osm.pbf (142 MB)
+2026-03-13 07:47:01 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading arizona-latest.osm.pbf …
+2026-03-13 07:47:16 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded arizona-latest.osm.pbf (293 MB)
+2026-03-13 07:47:16 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading arkansas-latest.osm.pbf …
+2026-03-13 07:47:49 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded arkansas-latest.osm.pbf (95 MB)
+2026-03-13 07:47:49 | DEBUG    | pipeline.04_osm_amenities:_download_state_pbf:129 | PBF cached: california-latest.osm.pbf
+2026-03-13 07:47:49 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading florida-latest.osm.pbf …
+2026-03-13 07:48:16 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded florida-latest.osm.pbf (643 MB)
+2026-03-13 07:48:16 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading georgia-latest.osm.pbf …
+2026-03-13 07:48:32 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded georgia-latest.osm.pbf (349 MB)
+2026-03-13 07:48:32 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading louisiana-latest.osm.pbf …
+2026-03-13 07:48:41 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded louisiana-latest.osm.pbf (143 MB)
+2026-03-13 07:48:41 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading mississippi-latest.osm.pbf …
+2026-03-13 07:48:46 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded mississippi-latest.osm.pbf (92 MB)
+2026-03-13 07:48:46 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading new-mexico-latest.osm.pbf …
+2026-03-13 07:48:53 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded new-mexico-latest.osm.pbf (132 MB)
+2026-03-13 07:48:53 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading north-carolina-latest.osm.pbf …
+2026-03-13 07:49:11 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded north-carolina-latest.osm.pbf (418 MB)
+2026-03-13 07:49:11 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading oklahoma-latest.osm.pbf …
+2026-03-13 07:49:19 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded oklahoma-latest.osm.pbf (164 MB)
+2026-03-13 07:49:19 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading south-carolina-latest.osm.pbf …
+2026-03-13 07:49:27 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded south-carolina-latest.osm.pbf (159 MB)
+2026-03-13 07:49:27 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading tennessee-latest.osm.pbf …
+2026-03-13 07:50:25 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded tennessee-latest.osm.pbf (179 MB)
+2026-03-13 07:50:25 | INFO     | pipeline.04_osm_amenities:_download_state_pbf:133 | Downloading texas-latest.osm.pbf …
+2026-03-13 07:51:22 | SUCCESS  | pipeline.04_osm_amenities:_download_state_pbf:146 | Downloaded texas-latest.osm.pbf (692 MB)
+2026-03-13 07:51:22 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from alabama-latest.osm.pbf …
+2026-03-13 07:51:55 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 01: 6,103 POIs cached
+2026-03-13 07:51:55 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from arizona-latest.osm.pbf …
+2026-03-13 07:53:06 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 04: 11,581 POIs cached
+2026-03-13 07:53:06 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from arkansas-latest.osm.pbf …
+2026-03-13 07:53:24 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 05: 3,668 POIs cached
+2026-03-13 07:53:24 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from florida-latest.osm.pbf …
+2026-03-13 07:56:15 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 12: 26,677 POIs cached
+2026-03-13 07:56:15 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from georgia-latest.osm.pbf …
+2026-03-13 07:57:25 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 13: 14,616 POIs cached
+2026-03-13 07:57:25 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from louisiana-latest.osm.pbf …
+2026-03-13 07:57:56 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 22: 5,493 POIs cached
+2026-03-13 07:57:56 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from mississippi-latest.osm.pbf …
+2026-03-13 07:58:13 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 28: 2,942 POIs cached
+2026-03-13 07:58:13 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from new-mexico-latest.osm.pbf …
+2026-03-13 07:58:44 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 35: 4,050 POIs cached
+2026-03-13 07:58:44 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from north-carolina-latest.osm.pbf …
+2026-03-13 08:00:11 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 37: 16,914 POIs cached
+2026-03-13 08:00:11 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from oklahoma-latest.osm.pbf …
+2026-03-13 08:00:40 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 40: 5,375 POIs cached
+2026-03-13 08:00:40 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from south-carolina-latest.osm.pbf …
+2026-03-13 08:01:12 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 45: 9,374 POIs cached
+2026-03-13 08:01:12 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from tennessee-latest.osm.pbf …
+2026-03-13 08:01:50 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 47: 9,349 POIs cached
+2026-03-13 08:01:50 | INFO     | pipeline.04_osm_amenities:_get_state_pois:170 | Parsing POIs from texas-latest.osm.pbf …
+2026-03-13 08:04:14 | DEBUG    | pipeline.04_osm_amenities:_get_state_pois:173 |   State 48: 39,217 POIs cached
+2026-03-13 08:04:14 | INFO     | pipeline.04_osm_amenities:_count_pois_spatial:203 | Total POIs across 14 states: 219,952
+2026-03-13 08:04:15 | INFO     | pipeline.04_osm_amenities:_count_pois_spatial:228 | Spatial join: counting POIs per candidate …
+2026-03-13 08:04:15 | INFO     | pipeline.04_osm_amenities:run:669 | Amenity hard filter: 39,252 → 12,954 block groups
+2026-03-13 08:04:15 | INFO     | pipeline.04_osm_amenities:fetch_acs_home_value:378 | Fetching ACS median home value for block groups…
+2026-03-13 08:04:47 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_home_value:408 | Cached home values for 160,922 block groups
+2026-03-13 08:04:47 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:423 | HUD FMR data already cached.
+2026-03-13 08:04:47 | INFO     | pipeline.04_osm_amenities:_download_padus:482 | Querying ScienceBase for PAD-US download URL…
+2026-03-13 08:05:17 | WARNING  | pipeline.04_osm_amenities:run:689 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-13 08:05:17 | INFO     | pipeline.04_osm_amenities:run:723 | North: Census ACS home value joined for 23,725/28,260 block groups
+2026-03-13 08:05:17 | SUCCESS  | pipeline.04_osm_amenities:run:740 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-13 08:05:17 | INFO     | pipeline.04_osm_amenities:run:733 | South: HUD FMR joined for 6,991/12,954 block groups
+2026-03-13 08:05:17 | SUCCESS  | pipeline.04_osm_amenities:run:740 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-13 08:05:17 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 3258.8s
+2026-03-13 08:05:17 | SUCCESS  | __main__:main:76 | Pipeline complete in 54.3 minutes.
+2026-03-13 08:05:17 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-13 08:14:41 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-13 08:14:41 | INFO     | __main__:main:69 | Running 4 pipeline step(s)…
+2026-03-13 08:14:41 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-13 08:14:41 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for all candidates)
+2026-03-13 08:14:41 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-13 08:20:31 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-13 08:20:31 | INFO     | __main__:main:69 | Running 4 pipeline step(s)…
+2026-03-13 08:20:31 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-13 08:20:31 | INFO     | __main__:run_step:39 | STEP 3: Walk Score + Bike Score (scrape walkscore.com for all candidates)
+2026-03-13 08:20:31 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-13 08:20:38 | INFO     | pipeline.03_walkscore:run:119 | North: scraping Walk Score for 28260 candidates (949 already cached)
+2026-03-13 08:40:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7736004, -73.8969565): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.7736/lng=-73.896957
+2026-03-13 08:44:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7761614, -73.8986642): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.776161/lng=-73.898664
+2026-03-13 08:45:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.5401039, -122.2767066): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.540104/lng=-122.276707
+2026-03-13 08:53:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4898776, -71.2677163): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.489878/lng=-71.267716
+2026-03-13 09:03:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6408725, -89.6710555): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.640873/lng=-89.671055
+2026-03-13 09:04:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9259678, -122.9760457): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.925968/lng=-122.976046
+2026-03-13 09:15:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7433767, -73.8785032): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.743377/lng=-73.878503
+2026-03-13 09:18:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7668153, -73.9061189): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.766815/lng=-73.906119
+2026-03-13 09:23:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7764123, -73.9086851): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.776412/lng=-73.908685
+2026-03-13 09:25:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.8170055, -77.0476525): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.817006/lng=-77.047652
+2026-03-13 09:39:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7618733, -73.9083511): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.761873/lng=-73.908351
+2026-03-13 09:50:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.336399, -71.0395143): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.336399/lng=-71.039514
+2026-03-13 09:50:59 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7629953, -73.9107532): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.762995/lng=-73.910753
+2026-03-13 10:00:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.330833, -71.0362514): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.330833/lng=-71.036251
+2026-03-13 10:06:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7563293, -73.910042): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.756329/lng=-73.910042
+2026-03-13 10:07:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9147934, -75.2414253): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.914793/lng=-75.241425
+2026-03-13 10:15:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8209691, -73.8745568): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.820969/lng=-73.874557
+2026-03-13 10:20:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7328756, -73.8754748): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.732876/lng=-73.875475
+2026-03-13 10:22:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5990043, -73.7602555): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.599004/lng=-73.760255
+2026-03-13 10:22:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7577077, -73.9128497): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.757708/lng=-73.91285
+2026-03-13 10:27:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8206938, -73.8598969): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.820694/lng=-73.859897
+2026-03-13 10:28:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7831843, -73.9176095): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.783184/lng=-73.917609
+2026-03-13 10:37:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8226053, -73.8623067): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.822605/lng=-73.862307
+2026-03-13 10:52:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8234636, -73.8599562): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.823464/lng=-73.859956
+2026-03-13 10:54:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7314279, -73.8577882): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.731428/lng=-73.857788
+2026-03-13 11:00:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7294947, -73.8628032): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.729495/lng=-73.862803
+2026-03-13 11:12:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.4843311, -73.2015027): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.484331/lng=-73.201503
+2026-03-13 11:48:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7667477, -73.8206021): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.766748/lng=-73.820602
+2026-03-13 11:52:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7624822, -73.8212582): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.762482/lng=-73.821258
+2026-03-13 11:54:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.8930137, -77.0031969): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.893014/lng=-77.003197
+2026-03-13 11:58:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6838578, -73.7487052): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.683858/lng=-73.748705
+2026-03-13 11:59:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7750171, -73.9265953): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.775017/lng=-73.926595
+2026-03-13 12:07:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7637256, -73.925621): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.763726/lng=-73.925621
+2026-03-13 12:09:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7600743, -73.9247231): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.760074/lng=-73.924723
+2026-03-13 12:13:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7658549, -73.8184739): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.765855/lng=-73.818474
+2026-03-13 12:23:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.833343, -73.8720272): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.833343/lng=-73.872027
+2026-03-13 12:28:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8336458, -73.8696944): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.833646/lng=-73.869694
+2026-03-13 12:28:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6912391, -73.8020185): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.691239/lng=-73.802019
+2026-03-13 12:28:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (46.0588782, -118.3316): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=46.058878/lng=-118.3316
+2026-03-13 12:31:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6057849, -75.4760524): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.605785/lng=-75.476052
+2026-03-13 12:32:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7459501, -73.9200369): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.74595/lng=-73.920037
+2026-03-13 12:35:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5875922, -73.8029721): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.587592/lng=-73.802972
+2026-03-13 12:46:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7422664, -74.194362): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.742266/lng=-74.194362
+2026-03-13 12:47:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7926187, -77.8605881): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.792619/lng=-77.860588
+2026-03-13 12:52:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6933617, -73.8018676): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.693362/lng=-73.801868
+2026-03-13 12:52:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7453167, -73.9215881): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.745317/lng=-73.921588
+2026-03-13 12:57:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7389468, -73.917312): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.738947/lng=-73.917312
+2026-03-13 13:08:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7200391, -73.8548496): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.720039/lng=-73.85485
+2026-03-13 13:11:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.1249263, -75.525889): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.124926/lng=-75.525889
+2026-03-13 13:17:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8124251, -73.9219206): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.812425/lng=-73.921921
+2026-03-13 13:27:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.76902, -73.8117407): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.76902/lng=-73.811741
+2026-03-13 13:28:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5888584, -73.8142073): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.588858/lng=-73.814207
+2026-03-13 13:40:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7447208, -73.9259769): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.744721/lng=-73.925977
+2026-03-13 13:40:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5850662, -73.8101695): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.585066/lng=-73.81017
+2026-03-13 13:53:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.8828251, -77.0932862): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.882825/lng=-77.093286
+2026-03-13 14:11:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.2210202, -122.5320438): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.22102/lng=-122.532044
+2026-03-13 14:12:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5876428, -75.4525812): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.587643/lng=-75.452581
+2026-03-13 14:15:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7526675, -73.933011): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.752668/lng=-73.933011
+2026-03-13 14:17:52 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7480145, -73.8140798): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.748014/lng=-73.81408
+2026-03-13 14:18:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9729212, -122.9869549): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.972921/lng=-122.986955
+2026-03-13 14:23:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6891761, -73.7361567): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.689176/lng=-73.736157
+2026-03-13 14:25:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7312094, -73.8252561): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.731209/lng=-73.825256
+2026-03-13 14:29:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.7660283, -108.5916729): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.766028/lng=-108.591673
+2026-03-13 14:31:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7408004, -73.8170571): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.7408/lng=-73.817057
+2026-03-13 14:34:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7189122, -73.9047105): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.718912/lng=-73.90471
+2026-03-13 14:50:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6617247, -73.843254): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.661725/lng=-73.843254
+2026-03-13 15:00:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7010496, -73.809147): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.70105/lng=-73.809147
+2026-03-13 15:06:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4551031, -71.2217373): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=42.455103/lng=-71.221737
+2026-03-13 15:17:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7705618, -73.9420198): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.770562/lng=-73.94202
+2026-03-13 15:18:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.7431644, -104.7317574): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=38.743164/lng=-104.731757
+2026-03-13 15:22:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8919822, -75.308263): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=39.891982/lng=-75.308263
+2026-03-13 16:55:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (48.7455335, -122.4772924): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=48.745534/lng=-122.477292
+2026-03-13 16:56:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2547833, -71.7997608): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.254783/lng=-71.799761
+2026-03-13 16:58:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.3132783, -72.9459786): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.313278/lng=-72.945979
+2026-03-13 16:59:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4499691, -81.7828591): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.449969/lng=-81.782859
+2026-03-13 17:00:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2993594, -85.5874917): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.299359/lng=-85.587492
+2026-03-13 17:06:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8615619, -87.7699238): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.861562/lng=-87.769924
+2026-03-13 17:06:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.7116945, -87.774859): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.711695/lng=-87.774859
+2026-03-13 17:08:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7171673, -73.7807785): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.717167/lng=-73.780778
+2026-03-13 17:09:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6898891, -73.8384996): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.689889/lng=-73.8385
+2026-03-13 17:16:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.0565855, -87.9100483): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.056585/lng=-87.910048
+2026-03-13 17:24:39 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7845647, -73.9508359): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.784565/lng=-73.950836
+2026-03-13 17:30:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6666807, -73.853383): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.666681/lng=-73.853383
+2026-03-13 17:36:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6940834, -73.8368354): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.694083/lng=-73.836835
+2026-03-13 17:43:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6930238, -73.8382557): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.693024/lng=-73.838256
+2026-03-13 17:49:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7189281, -73.7692064): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.718928/lng=-73.769206
+2026-03-13 17:52:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7465484, -73.9467759): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.746548/lng=-73.946776
+2026-03-13 18:00:19 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (46.86946, -114.0250639): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=46.86946/lng=-114.025064
+2026-03-13 18:10:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7204383, -73.773269): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.720438/lng=-73.773269
+2026-03-13 18:45:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8582633, -73.8918837): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.858263/lng=-73.891884
+2026-03-13 19:15:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.707557, -73.9216779): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.707557/lng=-73.921678
+2026-03-13 19:19:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8284763, -73.9409421): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.828476/lng=-73.940942
+2026-03-13 19:22:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8375847, -75.1626085): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.837585/lng=-75.162609
+2026-03-13 19:37:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7244114, -73.8039814): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.724411/lng=-73.803981
+2026-03-13 19:42:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7262414, -73.7846402): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.726241/lng=-73.78464
+2026-03-13 19:47:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7597832, -73.9580546): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.759783/lng=-73.958055
+2026-03-13 19:57:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.3009991, -111.6913618): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.300999/lng=-111.691362
+2026-03-13 20:05:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.3201267, -72.9548399): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.320127/lng=-72.95484
+2026-03-13 20:06:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7217931, -73.7473756): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.721793/lng=-73.747376
+2026-03-13 20:09:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7676526, -73.9606663): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.767653/lng=-73.960666
+2026-03-13 20:10:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6104362, -74.1301888): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.610436/lng=-74.130189
+2026-03-13 20:14:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8660026, -73.8689142): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.866003/lng=-73.868914
+2026-03-13 20:15:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7473596, -73.9563852): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.74736/lng=-73.956385
+2026-03-13 20:17:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7310245, -73.7964229): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.731024/lng=-73.796423
+2026-03-13 20:28:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6666267, -73.8649631): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.666627/lng=-73.864963
+2026-03-13 20:38:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6700711, -73.8643839): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.670071/lng=-73.864384
+2026-03-13 20:44:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6682568, -73.865369): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.668257/lng=-73.865369
+2026-03-13 20:50:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9617093, -75.2258445): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.961709/lng=-75.225844
+2026-03-13 20:53:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7717712, -74.2097735): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.771771/lng=-74.209773
+2026-03-13 20:55:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7437642, -73.9576131): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.743764/lng=-73.957613
+2026-03-13 20:59:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7348918, -73.9538333): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.734892/lng=-73.953833
+2026-03-13 21:27:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.755562, -73.9633322): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.755562/lng=-73.963332
+2026-03-13 21:34:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2684148, -71.0123948): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.268415/lng=-71.012395
+2026-03-13 21:36:59 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7296206, -73.7536766): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.729621/lng=-73.753677
+2026-03-13 21:38:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.870497, -73.8628506): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.870497/lng=-73.862851
+2026-03-13 21:40:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3949348, -71.0958809): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.394935/lng=-71.095881
+2026-03-13 21:46:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.326979, -71.0954993): HTTPSConnectionPool(host='www.walkscore.com', port=443): Read timed out. (read timeout=15)
+2026-03-13 21:46:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8717861, -87.7131559): HTTPSConnectionPool(host='www.walkscore.com', port=443): Max retries exceeded with url: /score/loc/lat=41.871786/lng=-87.713156 (Caused by NewConnectionError("HTTPSConnection(host='www.walkscore.com', port=443): Failed to establish a new connection: [Errno 51] Network is unreachable"))
+2026-03-13 21:46:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6833149, -73.8633085): HTTPSConnectionPool(host='www.walkscore.com', port=443): Max retries exceeded with url: /score/loc/lat=40.683315/lng=-73.863309 (Caused by NameResolutionError("HTTPSConnection(host='www.walkscore.com', port=443): Failed to resolve 'www.walkscore.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-03-13 21:46:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3336494, -71.0978951): HTTPSConnectionPool(host='www.walkscore.com', port=443): Max retries exceeded with url: /score/loc/lat=42.333649/lng=-71.097895 (Caused by NameResolutionError("HTTPSConnection(host='www.walkscore.com', port=443): Failed to resolve 'www.walkscore.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-03-13 21:47:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7342926, -73.956625): HTTPSConnectionPool(host='www.walkscore.com', port=443): Read timed out. (read timeout=15)
+2026-03-13 21:47:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8173852, -74.1492955): HTTPSConnectionPool(host='www.walkscore.com', port=443): Max retries exceeded with url: /score/loc/lat=40.817385/lng=-74.149295 (Caused by NameResolutionError("HTTPSConnection(host='www.walkscore.com', port=443): Failed to resolve 'www.walkscore.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-03-13 21:47:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9682022, -93.2556835): HTTPSConnectionPool(host='www.walkscore.com', port=443): Read timed out. (read timeout=15)
+2026-03-13 21:48:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7267852, -73.9525047): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.726785/lng=-73.952505
+2026-03-13 21:52:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7580382, -74.0386445): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.758038/lng=-74.038645
+2026-03-13 22:01:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.872364, -73.8693523): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.872364/lng=-73.869352
+2026-03-13 22:04:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7497057, -73.7812984): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.749706/lng=-73.781298
+2026-03-13 22:04:19 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6699728, -73.8696499): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.669973/lng=-73.86965
+2026-03-13 22:05:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.3530872, -122.3002095): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.353087/lng=-122.300209
+2026-03-13 22:06:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7154973, -73.9453998): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.715497/lng=-73.9454
+2026-03-13 22:08:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7698716, -73.9678751): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.769872/lng=-73.967875
+2026-03-13 22:10:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6233352, -93.6223631): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.623335/lng=-93.622363
+2026-03-13 22:12:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6816508, -73.8661796): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.681651/lng=-73.86618
+2026-03-13 22:13:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7359554, -73.7861194): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.735955/lng=-73.786119
+2026-03-13 22:19:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6812904, -73.8796879): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.68129/lng=-73.879688
+2026-03-13 22:33:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6815313, -73.8877362): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.681531/lng=-73.887736
+2026-03-13 22:43:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8745742, -73.8671081): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.874574/lng=-73.867108
+2026-03-13 23:06:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9178007, -75.1534287): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.917801/lng=-75.153429
+2026-03-13 23:06:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.2158253, -74.73548): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.215825/lng=-74.73548
+2026-03-13 23:07:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.9175862, -73.9884116): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.917586/lng=-73.988412
+2026-03-13 23:08:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8759429, -73.8653431): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.875943/lng=-73.865343
+2026-03-13 23:11:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8820593, -87.7771673): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.882059/lng=-87.777167
+2026-03-13 23:36:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7292723, -73.7338903): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.729272/lng=-73.73389
+2026-03-13 23:40:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8505579, -73.9417957): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.850558/lng=-73.941796
+2026-03-13 23:44:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8573058, -73.9342129): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.857306/lng=-73.934213
+2026-03-13 23:45:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8560065, -73.9358963): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.856006/lng=-73.935896
+2026-03-13 23:56:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6948358, -73.6938586): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.694836/lng=-73.693859
+2026-03-14 00:02:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7953319, -73.9744708): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.795332/lng=-73.974471
+2026-03-14 00:03:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9600136, -93.2854989): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.960014/lng=-93.285499
+2026-03-14 00:03:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9452497, -75.1698554): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.94525/lng=-75.169855
+2026-03-14 00:03:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8794073, -73.8759701): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.879407/lng=-73.87597
+2026-03-14 00:04:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7089921, -73.9488081): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.708992/lng=-73.948808
+2026-03-14 00:05:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.6267731, -122.3227244): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.626773/lng=-122.322724
+2026-03-14 00:05:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6870016, -73.9208654): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.687002/lng=-73.920865
+2026-03-14 00:05:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7923873, -73.9763306): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.792387/lng=-73.976331
+2026-03-14 00:05:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7491602, -74.0440793): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.74916/lng=-74.044079
+2026-03-14 00:06:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9430262, -82.9781999): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.943026/lng=-82.9782
+2026-03-14 00:06:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7800753, -73.9861807): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.780075/lng=-73.986181
+2026-03-14 00:06:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8739627, -73.8392885): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.873963/lng=-73.839288
+2026-03-14 00:07:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7032636, -73.9433557): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.703264/lng=-73.943356
+2026-03-14 00:07:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6149521, -74.1003061): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.614952/lng=-74.100306
+2026-03-14 00:07:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7933435, -73.9756188): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.793343/lng=-73.975619
+2026-03-14 00:07:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9487547, -77.0714072): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.948755/lng=-77.071407
+2026-03-14 00:08:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.3461732, -122.2991055): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.346173/lng=-122.299105
+2026-03-14 00:08:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9361958, -87.8116057): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.936196/lng=-87.811606
+2026-03-14 00:08:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9574627, -82.9859341): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.957463/lng=-82.985934
+2026-03-14 00:09:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7383126, -73.7526291): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.738313/lng=-73.752629
+2026-03-14 00:09:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.6686501, -90.3061333): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.66865/lng=-90.306133
+2026-03-14 00:09:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7522209, -73.9719228): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.752221/lng=-73.971923
+2026-03-14 00:10:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8873034, -74.1562539): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.887303/lng=-74.156254
+2026-03-14 00:10:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4026389, -71.1019327): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.402639/lng=-71.101933
+2026-03-14 00:10:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7187362, -74.0723761): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.718736/lng=-74.072376
+2026-03-14 00:10:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6641596, -73.6798737): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.66416/lng=-73.679874
+2026-03-14 00:11:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8432868, -74.1630403): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.843287/lng=-74.16304
+2026-03-14 00:11:17 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.827442, -71.4295553): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.827442/lng=-71.429555
+2026-03-14 00:11:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8649607, -73.9255157): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.864961/lng=-73.925516
+2026-03-14 00:11:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6331116, -93.6829115): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.633112/lng=-93.682912
+2026-03-14 00:12:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6712978, -73.8767351): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.671298/lng=-73.876735
+2026-03-14 00:12:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.784636, -73.9819263): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.784636/lng=-73.981926
+2026-03-14 00:12:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9743937, -75.239497): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.974394/lng=-75.239497
+2026-03-14 00:12:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6830344, -73.9131077): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.683034/lng=-73.913108
+2026-03-14 00:12:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5853069, -73.6922712): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.585307/lng=-73.692271
+2026-03-14 00:13:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8745786, -73.9046211): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.874579/lng=-73.904621
+2026-03-14 00:13:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7899153, -73.9743154): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.789915/lng=-73.974315
+2026-03-14 00:13:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.296082, -104.5992776): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.296082/lng=-104.599278
+2026-03-14 00:13:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7479753, -73.9708622): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.747975/lng=-73.970862
+2026-03-14 00:14:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7294813, -111.8962893): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.729481/lng=-111.896289
+2026-03-14 00:14:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.2030606, -84.3996729): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.203061/lng=-84.399673
+2026-03-14 00:14:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6322199, -93.6272092): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.63222/lng=-93.627209
+2026-03-14 00:14:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.7745038, -73.9008275): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.774504/lng=-73.900828
+2026-03-14 00:14:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.793024, -73.9739067): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.793024/lng=-73.973907
+2026-03-14 00:15:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8007584, -74.1506962): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.800758/lng=-74.150696
+2026-03-14 00:15:19 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8684262, -87.8134146): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.868426/lng=-87.813415
+2026-03-14 00:16:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8095281, -74.1550244): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.809528/lng=-74.155024
+2026-03-14 00:17:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7545942, -73.9727049): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.754594/lng=-73.972705
+2026-03-14 00:19:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.749017, -73.9713326): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.749017/lng=-73.971333
+2026-03-14 00:38:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7905133, -73.9757359): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.790513/lng=-73.975736
+2026-03-14 00:46:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7168804, -73.9576765): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.71688/lng=-73.957677
+2026-03-14 00:47:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4854502, -81.775998): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.48545/lng=-81.775998
+2026-03-14 00:54:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8794828, -73.849783): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.879483/lng=-73.849783
+2026-03-14 00:56:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (46.8017347, -92.1017378): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=46.801735/lng=-92.101738
+2026-03-14 01:09:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8824491, -73.8834885): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.882449/lng=-73.883488
+2026-03-14 01:16:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7432658, -73.7566845): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.743266/lng=-73.756685
+2026-03-14 01:21:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8783437, -73.9060847): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.878344/lng=-73.906085
+2026-03-14 01:34:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7093152, -73.9559081): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.709315/lng=-73.955908
+2026-03-14 01:35:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.1044256, -75.9537679): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.104426/lng=-75.953768
+2026-03-14 01:35:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.5333791, -122.6901814): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.533379/lng=-122.690181
+2026-03-14 01:36:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.948272, -75.1653955): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.948272/lng=-75.165396
+2026-03-14 01:38:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8037084, -75.1577657): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.803708/lng=-75.157766
+2026-03-14 01:39:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4068425, -71.1057946): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.406843/lng=-71.105795
+2026-03-14 01:47:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7553564, -73.9784669): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.755356/lng=-73.978467
+2026-03-14 01:48:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6969655, -73.9451536): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.696965/lng=-73.945154
+2026-03-14 01:49:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7180846, -73.9632608): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.718085/lng=-73.963261
+2026-03-14 01:53:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.68713, -73.9328835): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.68713/lng=-73.932884
+2026-03-14 01:56:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.1043413, -79.054706): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.104341/lng=-79.054706
+2026-03-14 02:00:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6854663, -73.9310599): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.685466/lng=-73.93106
+2026-03-14 02:09:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7707587, -73.9855128): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.770759/lng=-73.985513
+2026-03-14 02:11:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8839233, -73.8969829): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.883923/lng=-73.896983
+2026-03-14 02:12:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8859384, -73.8598098): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.885938/lng=-73.85981
+2026-03-14 02:18:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7688543, -73.9868884): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.768854/lng=-73.986888
+2026-03-14 02:21:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9789628, -93.2698679): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.978963/lng=-93.269868
+2026-03-14 02:22:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9580051, -93.1440846): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.958005/lng=-93.144085
+2026-03-14 02:25:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7138062, -73.9626785): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.713806/lng=-73.962678
+2026-03-14 02:25:16 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7692137, -73.9824753): 500 Server Error: Internal Server Error for url: https://www.walkscore.com/score/loc/lat=40.769214/lng=-73.982475
+2026-03-14 02:25:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7149101, -74.0633702): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.71491/lng=-74.06337
+2026-03-14 02:25:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9477493, -75.161189): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.947749/lng=-75.161189
+2026-03-14 02:26:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4213157, -71.1007405): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.421316/lng=-71.100741
+2026-03-14 02:26:19 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.3017653, -81.8423266): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.301765/lng=-81.842327
+2026-03-14 02:26:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7601805, -73.7637242): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.76018/lng=-73.763724
+2026-03-14 02:28:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7672142, -73.9880836): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.767214/lng=-73.988084
+2026-03-14 02:31:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.746397, -73.9786797): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.746397/lng=-73.97868
+2026-03-14 02:33:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.8578943, -78.8056443): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.857894/lng=-78.805644
+2026-03-14 02:38:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7589694, -73.997802): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.758969/lng=-73.997802
+2026-03-14 02:40:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7480265, -73.9795952): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.748027/lng=-73.979595
+2026-03-14 02:41:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4510189, -71.0741026): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.451019/lng=-71.074103
+2026-03-14 02:44:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7554355, -73.9815713): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.755435/lng=-73.981571
+2026-03-14 02:48:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7367788, -73.7251629): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.736779/lng=-73.725163
+2026-03-14 02:56:26 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.762209, -73.9917345): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.762209/lng=-73.991735
+2026-03-14 03:06:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8811232, -73.9152513): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.881123/lng=-73.915251
+2026-03-14 03:07:16 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7599778, -73.9936525): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.759978/lng=-73.993652
+2026-03-14 03:59:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.4475172, -84.0049714): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.447517/lng=-84.004971
+2026-03-14 03:59:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9342268, -77.3403144): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.934227/lng=-77.340314
+2026-03-14 04:04:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7476243, -74.0058869): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.747624/lng=-74.005887
+2026-03-14 04:19:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7370919, -73.9829493): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.737092/lng=-73.982949
+2026-03-14 04:24:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.303463, -85.6433305): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.303463/lng=-85.643331
+2026-03-14 04:28:52 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6332161, -73.8971744): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.633216/lng=-73.897174
+2026-03-14 04:35:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.1213525, -76.2243954): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.121353/lng=-76.224395
+2026-03-14 04:40:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8739814, -87.8484319): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.873981/lng=-87.848432
+2026-03-14 04:41:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3294133, -83.3262958): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.329413/lng=-83.326296
+2026-03-14 04:42:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.0655506, -87.8848956): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.065551/lng=-87.884896
+2026-03-14 04:47:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8326228, -87.6424964): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.832623/lng=-87.642496
+2026-03-14 04:50:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6296068, -73.8984805): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.629607/lng=-73.898481
+2026-03-14 04:55:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9589628, -75.1586003): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.958963/lng=-75.1586
+2026-03-14 04:59:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.659267, -73.8978787): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.659267/lng=-73.897879
+2026-03-14 05:00:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6699092, -73.9268403): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.669909/lng=-73.92684
+2026-03-14 05:01:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.995318, -83.0121429): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.995318/lng=-83.012143
+2026-03-14 05:02:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8925557, -73.838319): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.892556/lng=-73.838319
+2026-03-14 05:09:59 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.034891, -83.6418547): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.034891/lng=-83.641855
+2026-03-14 05:11:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7414857, -73.9881423): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.741486/lng=-73.988142
+2026-03-14 05:13:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.647823, -73.9001602): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.647823/lng=-73.90016
+2026-03-14 05:21:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7478368, -73.99478): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.747837/lng=-73.99478
+2026-03-14 05:25:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7497314, -73.9915412): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.749731/lng=-73.991541
+2026-03-14 05:34:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.734293, -73.9874986): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.734293/lng=-73.987499
+2026-03-14 05:35:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.2903223, -76.6250565): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.290322/lng=-76.625056
+2026-03-14 05:38:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3913124, -71.1273173): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.391312/lng=-71.127317
+2026-03-14 05:39:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7450257, -73.9968231): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.745026/lng=-73.996823
+2026-03-14 05:43:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7443629, -73.9973073): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.744363/lng=-73.997307
+2026-03-14 05:50:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6446034, -73.903162): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.644603/lng=-73.903162
+2026-03-14 06:05:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9583323, -77.1038843): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.958332/lng=-77.103884
+2026-03-14 06:06:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6575964, -73.9095944): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.657596/lng=-73.909594
+2026-03-14 06:12:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.924019, -74.1624071): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.924019/lng=-74.162407
+2026-03-14 06:18:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9724707, -77.0751985): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.972471/lng=-77.075198
+2026-03-14 06:34:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.2837452, -76.6011304): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.283745/lng=-76.60113
+2026-03-14 06:42:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7376881, -73.9944967): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.737688/lng=-73.994497
+2026-03-14 06:48:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8516476, -105.0017936): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.851648/lng=-105.001794
+2026-03-14 06:49:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9033625, -104.7848489): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.903363/lng=-104.784849
+2026-03-14 06:51:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6426974, -73.9080951): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.642697/lng=-73.908095
+2026-03-14 06:55:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9963275, -91.6458558): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.996327/lng=-91.645856
+2026-03-14 06:57:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.8673146, -104.8147441): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.867315/lng=-104.814744
+2026-03-14 07:00:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9891781, -83.0211431): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.989178/lng=-83.021143
+2026-03-14 07:02:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7351036, -74.0009157): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.735104/lng=-74.000916
+2026-03-14 07:03:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.4590546, -122.5938795): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.459055/lng=-122.593879
+2026-03-14 07:03:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8428046, -87.6357882): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.842805/lng=-87.635788
+2026-03-14 07:04:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7357035, -73.9995409): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.735703/lng=-73.999541
+2026-03-14 07:10:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.351407, -71.1377995): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.351407/lng=-71.137799
+2026-03-14 07:15:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.9954265, -93.1603922): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.995427/lng=-93.160392
+2026-03-14 07:17:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8937078, -87.6782133): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.893708/lng=-87.678213
+2026-03-14 07:24:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7331025, -74.0010429): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.733103/lng=-74.001043
+2026-03-14 07:44:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6616308, -73.9385752): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.661631/lng=-73.938575
+2026-03-14 07:49:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7266923, -74.0097605): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.726692/lng=-74.00976
+2026-03-14 08:29:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6854918, -73.9747683): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.685492/lng=-73.974768
+2026-03-14 08:39:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3008883, -83.4609569): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.300888/lng=-83.460957
+2026-03-14 08:44:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9745057, -75.1479259): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.974506/lng=-75.147926
+2026-03-14 08:50:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6881496, -87.5328241): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.68815/lng=-87.532824
+2026-03-14 08:55:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7102429, -73.9950554): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.710243/lng=-73.995055
+2026-03-14 08:58:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6646195, -73.9555227): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.66462/lng=-73.955523
+2026-03-14 08:59:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9769401, -75.1486924): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.97694/lng=-75.148692
+2026-03-14 09:02:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.9682005, -85.6323925): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.968201/lng=-85.632392
+2026-03-14 09:03:26 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5500161, -74.1550651): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.550016/lng=-74.155065
+2026-03-14 09:11:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.0400859, -77.3523115): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.040086/lng=-77.352311
+2026-03-14 09:16:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2739324, -83.2260091): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.273932/lng=-83.226009
+2026-03-14 09:22:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.773243, -73.7308101): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.773243/lng=-73.73081
+2026-03-14 09:59:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6890458, -73.9880169): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.689046/lng=-73.988017
+2026-03-14 10:01:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4145401, -81.7044254): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.41454/lng=-81.704425
+2026-03-14 10:05:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.0587612, -83.0244134): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.058761/lng=-83.024413
+2026-03-14 10:11:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6520106, -73.94848): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.652011/lng=-73.94848
+2026-03-14 10:22:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.666824, -117.3942471): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.666824/lng=-117.394247
+2026-03-14 10:23:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.322146, -89.0219121): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.322146/lng=-89.021912
+2026-03-14 10:25:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2449772, -83.2094414): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.244977/lng=-83.209441
+2026-03-14 10:50:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6270892, -73.9288328): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.627089/lng=-73.928833
+2026-03-14 10:55:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.443609, -122.6378108): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.443609/lng=-122.637811
+2026-03-14 10:56:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.916161, -75.385017): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.916161/lng=-75.385017
+2026-03-14 11:03:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9272026, -75.1004125): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.927203/lng=-75.100413
+2026-03-14 11:10:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6739844, -73.9839931): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.673984/lng=-73.983993
+2026-03-14 11:10:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.1304387, -87.9077956): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.130439/lng=-87.907796
+2026-03-14 11:21:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6722076, -73.9838143): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.672208/lng=-73.983814
+2026-03-14 11:33:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6713065, -73.9845718): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.671307/lng=-73.984572
+2026-03-14 11:39:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3002655, -83.4819539): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.300266/lng=-83.481954
+2026-03-14 11:44:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6414416, -74.0230785): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.641442/lng=-74.023078
+2026-03-14 11:49:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6934856, -111.8569094): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.693486/lng=-111.856909
+2026-03-14 11:53:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.7855365, -86.1539715): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.785536/lng=-86.153971
+2026-03-14 12:02:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.6648198, -122.375186): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.66482/lng=-122.375186
+2026-03-14 12:31:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.9430453, -74.1911938): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=40.943045/lng=-74.191194
+2026-03-14 12:36:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.0610445, -83.039722): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.061045/lng=-83.039722
+2026-03-14 12:43:16 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6629812, -73.9864764): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.662981/lng=-73.986476
+2026-03-14 12:53:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6766988, -74.008612): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=40.676699/lng=-74.008612
+2026-03-14 13:41:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.3241474, -85.8039722): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.324147/lng=-85.803972
+2026-03-14 13:43:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5013573, -80.064622): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.501357/lng=-80.064622
+2026-03-14 13:44:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6327817, -74.0117295): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.632782/lng=-74.01173
+2026-03-14 13:48:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.0048374, -105.256109): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.004837/lng=-105.256109
+2026-03-14 13:59:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6129484, -73.9476302): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.612948/lng=-73.94763
+2026-03-14 14:06:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.3701418, -74.4294633): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.370142/lng=-74.429463
+2026-03-14 14:07:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9204345, -75.076857): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.920434/lng=-75.076857
+2026-03-14 14:13:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5999754, -73.9466449): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.599975/lng=-73.946645
+2026-03-14 14:16:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6269149, -73.9567054): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.626915/lng=-73.956705
+2026-03-14 14:17:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6202787, -73.9504856): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.620279/lng=-73.950486
+2026-03-14 14:17:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.295234, -122.3901411): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.295234/lng=-122.390141
+2026-03-14 14:20:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.7350668, -87.5874546): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.735067/lng=-87.587455
+2026-03-14 14:21:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9480849, -87.6928064): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.948085/lng=-87.692806
+2026-03-14 14:21:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.604414, -73.9484485): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.604414/lng=-73.948448
+2026-03-14 14:23:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6253737, -74.0099257): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.625374/lng=-74.009926
+2026-03-14 14:25:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.9236842, -74.217422): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.923684/lng=-74.217422
+2026-03-14 14:28:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (43.088353, -87.9971607): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=43.088353/lng=-87.997161
+2026-03-14 14:29:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.0098765, -83.0649673): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.009876/lng=-83.064967
+2026-03-14 14:43:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6077374, -73.9515132): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.607737/lng=-73.951513
+2026-03-14 14:46:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6410102, -74.0020263): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.64101/lng=-74.002026
+2026-03-14 14:57:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6122186, -73.9539245): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.612219/lng=-73.953924
+2026-03-14 15:05:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5993323, -73.952492): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.599332/lng=-73.952492
+2026-03-14 15:09:16 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.0740515, -87.754361): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.074052/lng=-87.754361
+2026-03-14 15:44:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6124921, -73.9597711): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.612492/lng=-73.959771
+2026-03-14 15:49:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.684333, -111.8294974): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.684333/lng=-111.829497
+2026-03-14 15:52:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6140851, -73.9611838): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.614085/lng=-73.961184
+2026-03-14 15:57:09 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6260007, -73.9974081): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.626001/lng=-73.997408
+2026-03-14 16:01:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5119479, -80.0490316): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.511948/lng=-80.049032
+2026-03-14 16:02:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9508719, -87.6682599): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.950872/lng=-87.66826
+2026-03-14 16:09:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.5331332, -121.4999734): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.533133/lng=-121.499973
+2026-03-14 16:32:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6082436, -73.9996895): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.608244/lng=-73.99969
+2026-03-14 16:32:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9622947, -87.6838589): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.962295/lng=-87.683859
+2026-03-14 16:33:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9396451, -87.6420491): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.939645/lng=-87.642049
+2026-03-14 16:38:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9992509, -75.1004104): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.999251/lng=-75.10041
+2026-03-14 16:38:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6132905, -73.9684054): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.61329/lng=-73.968405
+2026-03-14 16:39:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6154546, -73.9721569): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.615455/lng=-73.972157
+2026-03-14 16:41:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6802581, -93.7782523): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.680258/lng=-93.778252
+2026-03-14 17:11:17 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.1227104, -72.7495271): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.12271/lng=-72.749527
+2026-03-14 17:12:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6059413, -73.9950742): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.605941/lng=-73.995074
+2026-03-14 17:17:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5933427, -73.9687006): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.593343/lng=-73.968701
+2026-03-14 17:43:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.8993199, -88.0874266): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.89932/lng=-88.087427
+2026-03-14 17:46:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.2407038, -85.5483512): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.240704/lng=-85.548351
+2026-03-14 18:06:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.3938397, -111.8252897): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.39384/lng=-111.82529
+2026-03-14 18:08:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.4937331, -122.4182819): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.493733/lng=-122.418282
+2026-03-14 18:13:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.9822177, -87.6960638): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.982218/lng=-87.696064
+2026-03-14 18:14:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6666332, -83.6198126): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.666633/lng=-83.619813
+2026-03-14 18:28:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.3483512, -76.5550152): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.348351/lng=-76.555015
+2026-03-14 18:31:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5778005, -73.9772084): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.577801/lng=-73.977208
+2026-03-14 18:36:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.1560275, -71.039963): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=42.156028/lng=-71.039963
+2026-03-14 18:49:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.7347697, -93.5920316): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.73477/lng=-93.592032
+2026-03-14 18:52:54 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5025956, -74.2699316): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.502596/lng=-74.269932
+2026-03-14 19:00:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.5233413, -122.8007998): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.523341/lng=-122.8008
+2026-03-14 19:01:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.141109, -96.0328576): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.141109/lng=-96.032858
+2026-03-14 19:21:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.8096898, -77.284487): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.80969/lng=-77.284487
+2026-03-14 19:25:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.6891856, -121.371742): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.689186/lng=-121.371742
+2026-03-14 19:44:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8835544, -75.0176911): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.883554/lng=-75.017691
+2026-03-14 19:54:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.8551676, -73.6285591): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.855168/lng=-73.628559
+2026-03-14 20:12:13 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.8542141, -93.4505055): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.854214/lng=-93.450506
+2026-03-14 20:21:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.6507265, -93.2611064): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.650726/lng=-93.261106
+2026-03-14 20:37:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.0535742, -75.0886794): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.053574/lng=-75.088679
+2026-03-14 20:47:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6874674, -74.4103904): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.687467/lng=-74.41039
+2026-03-14 21:02:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.6686311, -73.5363057): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.668631/lng=-73.536306
+2026-03-14 21:07:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.158444, -81.4874983): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.158444/lng=-81.487498
+2026-03-14 21:07:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4769336, -81.6120288): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.476934/lng=-81.612029
+2026-03-14 22:08:03 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4505385, -81.5877032): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.450539/lng=-81.587703
+2026-03-14 22:19:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.0457761, -94.633202): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.045776/lng=-94.633202
+2026-03-14 22:22:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.0959058, -71.0477815): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.095906/lng=-71.047781
+2026-03-14 22:31:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.7145942, -104.9263797): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.714594/lng=-104.92638
+2026-03-14 22:33:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.4870369, -122.8508599): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.487037/lng=-122.85086
+2026-03-14 22:36:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.0982483, -77.1572611): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.098248/lng=-77.157261
+2026-03-14 22:39:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.1821626, -105.0965004): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.182163/lng=-105.0965
+2026-03-14 22:44:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5371784, -111.866553): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.537178/lng=-111.866553
+2026-03-14 22:51:23 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.6619203, -121.3148288): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.66192/lng=-121.314829
+2026-03-14 22:51:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.4692759, -79.9555792): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.469276/lng=-79.955579
+2026-03-14 22:52:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3978602, -83.1451273): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.39786/lng=-83.145127
+2026-03-14 22:53:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.3787551, -79.9782859): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.378755/lng=-79.978286
+2026-03-14 22:53:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.7034118, -73.9142556): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.703412/lng=-73.914256
+2026-03-14 22:53:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4609717, -81.5755797): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.460972/lng=-81.57558
+2026-03-14 23:16:35 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.6890577, -77.3275841): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.689058/lng=-77.327584
+2026-03-14 23:23:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.5195406, -81.5822674): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.519541/lng=-81.582267
+2026-03-15 00:01:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.5337548, -122.896137): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.533755/lng=-122.896137
+2026-03-15 00:02:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6709981, -104.9108682): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.670998/lng=-104.910868
+2026-03-15 00:02:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.1103494, -77.196842): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.110349/lng=-77.196842
+2026-03-15 00:03:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.2516579, -83.6548132): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.251658/lng=-83.654813
+2026-03-15 00:03:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.5950325, -76.1733707): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.595033/lng=-76.173371
+2026-03-15 00:03:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.5047774, -122.8896113): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.504777/lng=-122.889611
+2026-03-15 00:04:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.4520443, -74.4078819): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.452044/lng=-74.407882
+2026-03-15 00:04:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (48.4114784, -122.3306607): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=48.411478/lng=-122.330661
+2026-03-15 00:05:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.1984681, -75.9945694): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.198468/lng=-75.994569
+2026-03-15 00:05:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7150863, -73.4850238): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.715086/lng=-73.485024
+2026-03-15 00:05:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6049307, -105.1144828): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.604931/lng=-105.114483
+2026-03-15 00:06:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.6850092, -121.2871814): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.685009/lng=-121.287181
+2026-03-15 00:06:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6313089, -104.992612): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.631309/lng=-104.992612
+2026-03-15 00:06:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.4710942, -79.9294613): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.471094/lng=-79.929461
+2026-03-15 00:07:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.5201041, -122.8943167): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.520104/lng=-122.894317
+2026-03-15 00:07:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.3582194, -83.1285726): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.358219/lng=-83.128573
+2026-03-15 00:07:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.7723147, -73.5056161): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.772315/lng=-73.505616
+2026-03-15 00:07:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.664486, -104.9356428): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.664486/lng=-104.935643
+2026-03-15 00:08:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.8099222, -74.9431864): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.809922/lng=-74.943186
+2026-03-15 00:08:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.684766, -75.0009813): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.684766/lng=-75.000981
+2026-03-15 00:08:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6049421, -105.0977197): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.604942/lng=-105.09772
+2026-03-15 00:09:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6192276, -105.0224562): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.619228/lng=-105.022456
+2026-03-15 00:09:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9670735, -86.1200165): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.967073/lng=-86.120017
+2026-03-15 00:10:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.5125468, -81.5619886): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.512547/lng=-81.561989
+2026-03-15 00:10:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.6766569, -104.9175208): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.676657/lng=-104.917521
+2026-03-15 00:10:52 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (45.4898066, -122.886779): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=45.489807/lng=-122.886779
+2026-03-15 00:11:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4981879, -83.2429265): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.498188/lng=-83.242926
+2026-03-15 00:11:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4628913, -83.177121): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.462891/lng=-83.177121
+2026-03-15 00:12:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.9911859, -80.2330395): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.991186/lng=-80.23304
+2026-03-15 00:12:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.5100961, -81.5604817): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.510096/lng=-81.560482
+2026-03-15 00:13:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.5193374, -83.3648508): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.519337/lng=-83.364851
+2026-03-15 00:13:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.3803375, -83.0973374): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.380338/lng=-83.097337
+2026-03-15 00:13:41 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9755128, -74.8666438): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.975513/lng=-74.866644
+2026-03-15 00:14:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.1158494, -77.202299): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.115849/lng=-77.202299
+2026-03-15 00:14:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.727425, -73.4862221): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.727425/lng=-73.486222
+2026-03-15 00:14:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.1937023, -73.1858065): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.193702/lng=-73.185806
+2026-03-15 00:14:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.898017, -86.0473553): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.898017/lng=-86.047355
+2026-03-15 00:15:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.1572413, -72.4737272): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.157241/lng=-72.473727
+2026-03-15 00:35:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.9681348, -74.8773643): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.968135/lng=-74.877364
+2026-03-15 00:47:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.192001, -77.2528508): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.192001/lng=-77.252851
+2026-03-15 00:59:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.2453933, -122.6234348): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.245393/lng=-122.623435
+2026-03-15 01:05:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (47.0919379, -122.3014993): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=47.091938/lng=-122.301499
+2026-03-15 01:06:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.6549431, -85.2854533): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.654943/lng=-85.285453
+2026-03-15 01:09:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.659633, -73.4005119): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.659633/lng=-73.400512
+2026-03-15 01:20:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.4491374, -121.366098): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.449137/lng=-121.366098
+2026-03-15 01:26:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4721186, -83.1379487): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.472119/lng=-83.137949
+2026-03-15 01:36:32 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.5803828, -74.495249): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.580383/lng=-74.495249
+2026-03-15 01:53:08 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.4403943, -79.883811): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.440394/lng=-79.883811
+2026-03-15 02:11:52 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (42.4872016, -83.1098759): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=42.487202/lng=-83.109876
+2026-03-15 02:23:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (38.288385, -122.2873751): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=38.288385/lng=-122.287375
+2026-03-15 02:25:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.3359401, -75.9848315): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.33594/lng=-75.984831
+2026-03-15 02:26:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (39.54362, -104.8811846): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=39.54362/lng=-104.881185
+2026-03-15 02:26:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.5398063, -72.6299491): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.539806/lng=-72.629949
+2026-03-15 02:34:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (41.6109648, -81.5197811): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=41.610965/lng=-81.519781
+2026-03-15 02:44:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.2656746, -75.2204111): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.265675/lng=-75.220411
+2026-03-15 02:50:20 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (40.3029547, -73.9959296): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=40.302955/lng=-73.99593
+2026-03-15 02:50:38 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (44.0409633, -91.6230388): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=44.040963/lng=-91.623039
+2026-03-15 03:44:17 | INFO     | pipeline.03_walkscore:run:137 | Successfully scraped 27797/28260 scores
+2026-03-15 03:44:17 | INFO     | pipeline.03_walkscore:run:162 | North: dropped 12574 block groups below Walk Score 65 / Bike Score 50
+2026-03-15 03:44:17 | SUCCESS  | pipeline.03_walkscore:run:203 | Saved /Users/steph/code/where_to_live/data/processed/north_walkscored.parquet (53,342 candidates)
+2026-03-15 03:44:17 | INFO     | pipeline.03_walkscore:run:119 | South: scraping Walk Score for 12954 candidates (577 already cached)
+2026-03-15 04:10:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (25.7751775, -80.2648378): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=25.775178/lng=-80.264838
+2026-03-15 04:13:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.5061367, -87.1900904): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.506137/lng=-87.19009
+2026-03-15 04:14:36 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.9750374, -118.3980012): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.975037/lng=-118.398001
+2026-03-15 04:15:43 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.1739711, -118.376807): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.173971/lng=-118.376807
+2026-03-15 04:18:07 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.0277419, -90.2588819): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.027742/lng=-90.258882
+2026-03-15 04:26:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.0015106, -90.228341): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.001511/lng=-90.228341
+2026-03-15 04:28:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (25.9436055, -80.2885328): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=25.943606/lng=-80.288533
+2026-03-15 04:35:28 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (27.972916, -82.492721): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=27.972916/lng=-82.492721
+2026-03-15 04:36:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.1618652, -118.3578142): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.161865/lng=-118.357814
+2026-03-15 04:49:59 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.960713, -118.3580322): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.960713/lng=-118.358032
+2026-03-15 05:10:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.1614884, -110.9540189): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.161488/lng=-110.954019
+2026-03-15 05:31:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.7737961, -118.1828787): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.773796/lng=-118.182879
+2026-03-15 05:35:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (25.7760477, -80.3407131): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=25.776048/lng=-80.340713
+2026-03-15 05:36:26 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8527338, -84.351647): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.852734/lng=-84.351647
+2026-03-15 05:49:17 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0633549, -117.1896406): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.063355/lng=-117.189641
+2026-03-15 06:16:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.5212949, -86.4666601): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.521295/lng=-86.46666
+2026-03-15 06:17:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.7382053, -117.8760073): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.738205/lng=-117.876007
+2026-03-15 07:02:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.6877342, -82.3449419): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.687734/lng=-82.344942
+2026-03-15 07:07:06 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.4636769, -112.0744162): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.463677/lng=-112.074416
+2026-03-15 07:11:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.4628168, -93.7524319): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.462817/lng=-93.752432
+2026-03-15 07:31:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (27.3461539, -82.491931): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=27.346154/lng=-82.491931
+2026-03-15 08:00:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8394547, -118.3469839): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.839455/lng=-118.346984
+2026-03-15 08:42:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0313884, -118.3858208): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.031388/lng=-118.385821
+2026-03-15 08:56:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8954875, -118.2003246): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.895488/lng=-118.200325
+2026-03-15 08:58:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.4164547, -111.9136768): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.416455/lng=-111.913677
+2026-03-15 08:59:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.1548698, -80.1988369): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.15487/lng=-80.198837
+2026-03-15 09:01:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.7425735, -117.9354761): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.742573/lng=-117.935476
+2026-03-15 09:05:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.3712927, -111.725973): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.371293/lng=-111.725973
+2026-03-15 09:20:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0087058, -118.2885986): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.008706/lng=-118.288599
+2026-03-15 09:32:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0383613, -118.4345885): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.038361/lng=-118.434589
+2026-03-15 10:02:33 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.2301971, -111.7249266): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.230197/lng=-111.724927
+2026-03-15 10:12:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0456169, -118.4322448): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.045617/lng=-118.432245
+2026-03-15 10:30:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.2447611, -118.2577244): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.244761/lng=-118.257724
+2026-03-15 10:41:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.0126298, -80.2455197): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.01263/lng=-80.24552
+2026-03-15 10:55:04 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0508071, -118.4380392): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.050807/lng=-118.438039
+2026-03-15 10:57:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (28.4075087, -81.4196544): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=28.407509/lng=-81.419654
+2026-03-15 11:01:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0545989, -118.390787): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.054599/lng=-118.390787
+2026-03-15 11:02:24 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.7065158, -97.3663666): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.706516/lng=-97.366367
+2026-03-15 11:11:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0254359, -118.4872614): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.025436/lng=-118.487261
+2026-03-15 11:23:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (27.9838416, -82.7780096): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=27.983842/lng=-82.77801
+2026-03-15 11:26:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.5537515, -101.8639378): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.553751/lng=-101.863938
+2026-03-15 11:46:19 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.0161869, -97.0502231): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.016187/lng=-97.050223
+2026-03-15 11:47:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.4228097, -98.5161315): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.42281/lng=-98.516132
+2026-03-15 11:48:25 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (31.768722, -106.488563): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=31.768722/lng=-106.488563
+2026-03-15 12:40:37 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.7196935, -95.3813741): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.719694/lng=-95.381374
+2026-03-15 12:45:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8007091, -117.8399917): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.800709/lng=-117.839992
+2026-03-15 13:10:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0780658, -118.4044812): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.078066/lng=-118.404481
+2026-03-15 13:23:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.5161467, -98.6044448): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.516147/lng=-98.604445
+2026-03-15 13:32:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.3609022, -111.7814625): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.360902/lng=-111.781463
+2026-03-15 13:51:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0726263, -118.3042131): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.072626/lng=-118.304213
+2026-03-15 13:52:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.2075351, -80.1107334): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.207535/lng=-80.110733
+2026-03-15 13:56:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.599067, -101.9497131): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.599067/lng=-101.949713
+2026-03-15 14:08:58 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (25.7492207, -80.4263166): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=25.749221/lng=-80.426317
+2026-03-15 14:09:48 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.1148608, -80.2907889): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.114861/lng=-80.290789
+2026-03-15 14:12:11 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0538788, -118.2733559): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.053879/lng=-118.273356
+2026-03-15 14:31:10 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.3916466, -91.1061002): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.391647/lng=-91.1061
+2026-03-15 14:39:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.2396097, -110.8554061): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.23961/lng=-110.855406
+2026-03-15 14:57:40 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.418337, -111.8542608): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.418337/lng=-111.854261
+2026-03-15 15:03:12 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0509417, -118.2506176): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.050942/lng=-118.250618
+2026-03-15 15:36:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.3554216, -111.8671754): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.355422/lng=-111.867175
+2026-03-15 15:42:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.7539666, -97.1126839): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.753967/lng=-97.112684
+2026-03-15 15:45:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8376157, -117.9896443): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.837616/lng=-117.989644
+2026-03-15 15:50:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.2351635, -80.1573217): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.235163/lng=-80.157322
+2026-03-15 16:16:57 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.8619066, -96.6800806): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.861907/lng=-96.680081
+2026-03-15 16:35:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.8623391, -83.6159475): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.862339/lng=-83.615948
+2026-03-15 16:35:42 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.9606291, -90.0950061): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.960629/lng=-90.095006
+2026-03-15 16:35:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (28.6220739, -81.3164723): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=28.622074/lng=-81.316472
+2026-03-15 16:39:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.9840387, -117.3688434): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.984039/lng=-117.368843
+2026-03-15 16:41:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.6464205, -97.3733036): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.64642/lng=-97.373304
+2026-03-15 17:10:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8873674, -84.4828627): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.887367/lng=-84.482863
+2026-03-15 17:17:56 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.0768923, -97.0701669): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.076892/lng=-97.070167
+2026-03-15 17:22:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.7204166, -95.4447745): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.720417/lng=-95.444774
+2026-03-15 17:30:31 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.658448, -96.8484697): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.658448/lng=-96.84847
+2026-03-15 17:37:45 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.9151322, -117.1400628): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.915132/lng=-117.140063
+2026-03-15 17:43:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.0300732, -96.8896864): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.030073/lng=-96.889686
+2026-03-15 17:46:00 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8568718, -117.9264883): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.856872/lng=-117.926488
+2026-03-15 18:20:55 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8987771, -117.1997347): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.898777/lng=-117.199735
+2026-03-15 18:28:34 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.9631526, -117.3906001): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.963153/lng=-117.3906
+2026-03-15 18:29:46 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.9774543, -90.0611197): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.977454/lng=-90.06112
+2026-03-15 18:31:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.8845553, -117.9569393): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.884555/lng=-117.956939
+2026-03-15 19:10:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.7203196, -84.1455201): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.72032/lng=-84.14552
+2026-03-15 19:12:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.1408887, -117.0586306): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.140889/lng=-117.058631
+2026-03-15 19:15:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (26.2830844, -80.2266731): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=26.283084/lng=-80.226673
+2026-03-15 19:33:49 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (32.7773551, -116.9635832): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=32.777355/lng=-116.963583
+2026-03-15 19:38:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.7336436, -95.4926621): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.733644/lng=-95.492662
+2026-03-15 20:12:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.4760737, -112.2508535): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.476074/lng=-112.250854
+2026-03-15 20:22:21 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.0177047, -96.662865): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.017705/lng=-96.662865
+2026-03-15 20:22:51 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0986519, -118.1271838): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.098652/lng=-118.127184
+2026-03-15 20:36:01 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.3903563, -118.5380951): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.390356/lng=-118.538095
+2026-03-15 20:36:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.1034279, -118.1173013): 500 Server Error: INTERNAL SERVER ERROR for url: https://www.walkscore.com/score/loc/lat=34.103428/lng=-118.117301
+2026-03-15 20:38:22 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.1739496, -118.6178069): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.17395/lng=-118.617807
+2026-03-15 20:47:30 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (29.9919323, -91.8262301): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=29.991932/lng=-91.82623
+2026-03-15 21:02:47 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.6507257, -112.1819483): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.650726/lng=-112.181948
+2026-03-15 21:03:14 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.1415072, -117.8658898): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.141507/lng=-117.86589
+2026-03-15 21:04:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.4067403, -97.846335): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.40674/lng=-97.846335
+2026-03-15 21:19:50 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.3806574, -97.8900018): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.380657/lng=-97.890002
+2026-03-15 21:23:29 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.0946954, -96.6917993): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.094695/lng=-96.691799
+2026-03-15 21:24:39 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (30.2158003, -95.5245866): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=30.2158/lng=-95.524587
+2026-03-15 21:24:52 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (28.6638714, -81.508357): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=28.663871/lng=-81.508357
+2026-03-15 21:27:53 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.1030879, -96.7017329): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.103088/lng=-96.701733
+2026-03-15 21:28:27 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.951761, -116.9774154): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.951761/lng=-116.977415
+2026-03-15 21:37:05 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.5564545, -112.2847344): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.556455/lng=-112.284734
+2026-03-15 21:37:18 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.4358889, -118.5532956): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.435889/lng=-118.553296
+2026-03-15 21:39:15 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (33.1500644, -96.8670516): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=33.150064/lng=-96.867052
+2026-03-15 21:48:44 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (28.5480496, -81.5999245): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=28.54805/lng=-81.599925
+2026-03-15 22:00:02 | WARNING  | pipeline.03_walkscore:scrape_walkscore:80 | Scrape failed for (34.0987017, -84.5416084): 504 Server Error: GATEWAY_TIMEOUT for url: https://www.walkscore.com/score/loc/lat=34.098702/lng=-84.541608
+2026-03-15 22:47:45 | INFO     | pipeline.03_walkscore:run:137 | Successfully scraped 12848/12954 scores
+2026-03-15 22:47:45 | INFO     | pipeline.03_walkscore:run:162 | South: dropped 7985 block groups below Walk Score 65 / Bike Score 50
+2026-03-15 22:47:45 | SUCCESS  | pipeline.03_walkscore:run:203 | Saved /Users/steph/code/where_to_live/data/processed/south_walkscored.parquet (31,267 candidates)
+2026-03-15 22:47:45 | SUCCESS  | __main__:run_step:45 | Step 3 complete in 224833.8s
+2026-03-15 22:47:45 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-15 22:47:45 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / HUD FMR)
+2026-03-15 22:47:45 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-15 22:47:45 | INFO     | pipeline.04_osm_amenities:run:653 | --- NORTH (53,342 candidates) ---
+2026-03-15 22:47:45 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:330 | north: 65916 cached, 0 remaining
+2026-03-15 22:47:45 | INFO     | pipeline.04_osm_amenities:run:669 | Amenity hard filter: 53,342 → 15,686 block groups
+2026-03-15 22:47:45 | INFO     | pipeline.04_osm_amenities:run:653 | --- SOUTH (31,267 candidates) ---
+2026-03-15 22:47:45 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:330 | south: 39252 cached, 0 remaining
+2026-03-15 22:47:45 | INFO     | pipeline.04_osm_amenities:run:669 | Amenity hard filter: 31,267 → 4,969 block groups
+2026-03-15 22:47:45 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_home_value:375 | Census ACS home value data already cached.
+2026-03-15 22:47:45 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:423 | HUD FMR data already cached.
+2026-03-15 22:47:45 | INFO     | pipeline.04_osm_amenities:_download_padus:482 | Querying ScienceBase for PAD-US download URL…
+2026-03-15 22:48:18 | WARNING  | pipeline.04_osm_amenities:run:689 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-15 22:48:18 | INFO     | pipeline.04_osm_amenities:run:723 | North: Census ACS home value joined for 12,093/15,686 block groups
+2026-03-15 22:48:18 | SUCCESS  | pipeline.04_osm_amenities:run:740 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-15 22:48:18 | INFO     | pipeline.04_osm_amenities:run:733 | South: HUD FMR joined for 1,946/4,969 block groups
+2026-03-15 22:48:18 | SUCCESS  | pipeline.04_osm_amenities:run:740 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-15 22:48:18 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 32.8s
+2026-03-15 22:48:18 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-15 22:48:18 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-15 22:48:18 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-15 22:48:18 | INFO     | pipeline.05_score_and_rank:run:191 | --- NORTH (15,686 candidates after all filters) ---
+2026-03-15 22:48:18 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-15 22:48:18 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+       geoid  composite_score  walk_score  median_home_value
+421010007021        80.248790       100.0           197300.0
+360470445002        79.107143        98.0             9999.0
+421010004013        78.966507        99.0           191500.0
+360610097001        78.883168        98.0           108300.0
+360610093001        78.842465        98.0           116400.0
+410510051023        78.802560       100.0           485100.0
+110010053032        78.801985        99.0           331700.0
+360610097003        78.761058        98.0           132600.0
+110010053023        78.714197        99.0           402900.0
+110010043004        78.557061        99.0           487900.0
+2026-03-15 22:48:18 | INFO     | pipeline.05_score_and_rank:run:191 | --- SOUTH (4,969 candidates after all filters) ---
+2026-03-15 22:48:18 | SUCCESS  | pipeline.05_score_and_rank:run:199 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-15 22:48:18 | DEBUG    | pipeline.05_score_and_rank:run:200 | 
+       geoid  composite_score  walk_score  fmr_2br_rent
+220710038001        74.277651        95.0        1362.0
+060730053013        74.068571        99.0           NaN
+060372073032        73.335714        97.0           NaN
+060730052022        73.258571        99.0           NaN
+060730054012        73.258571        99.0           NaN
+220710026002        73.120508        97.0        1362.0
+060372073031        73.027143        98.0           NaN
+060730053012        72.988571        99.0           NaN
+060730054011        72.988571        99.0           NaN
+060372073041        72.757143        98.0           NaN
+2026-03-15 22:48:18 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-15 22:48:18 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-15 22:48:18 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-15 22:48:18 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-15 22:48:18 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-15 22:48:37 | INFO     | pipeline.06_visualize:run:193 | NORTH: 25 candidates
+2026-03-15 22:48:37 | SUCCESS  | pipeline.06_visualize:run:201 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-15 22:48:37 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-15 22:49:19 | INFO     | pipeline.06_visualize:run:193 | SOUTH: 25 candidates
+2026-03-15 22:49:19 | SUCCESS  | pipeline.06_visualize:run:201 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-15 22:49:19 | INFO     | pipeline.06_visualize:run:204 | Building combined map…
+2026-03-15 22:49:19 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-15 22:49:58 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-15 22:50:35 | SUCCESS  | pipeline.06_visualize:run:253 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-15 22:50:35 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 137.5s
+2026-03-15 22:50:35 | SUCCESS  | __main__:main:76 | Pipeline complete in 3750.1 minutes.
+2026-03-15 22:50:35 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/

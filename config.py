@@ -18,14 +18,14 @@ MAPS = OUTPUTS / "maps"
 # Geographic filters
 # ---------------------------------------------------------------------------
 # North band: warmer months (buying)
-NORTH_LAT_MIN = 40.0
+NORTH_LAT_MIN = 38.0
 NORTH_LAT_MAX = 49.0
 
 # South band: cooler months (renting)
 SOUTH_LAT_MIN = 25.0
 SOUTH_LAT_MAX = 35.0
 
-# Minimum population density to exclude rural/exurban ZCTAs
+# Minimum population density to exclude rural/exurban block groups
 MIN_POP_DENSITY = 2000  # people per sq mile
 
 # ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ MAX_AIRPORT_DRIVE_MIN = 60   # minutes
 AIRPORT_HUB_TYPES = {"Large", "Medium", "Small"}
 
 # ---------------------------------------------------------------------------
-# Walkability hard filters (ZCTAs below these are eliminated before scoring)
+# Walkability hard filters (block groups below these are eliminated before scoring)
 # ---------------------------------------------------------------------------
 MIN_WALK_SCORE = 65
 MIN_BIKE_SCORE = 50
@@ -46,7 +46,7 @@ MIN_BIKE_SCORE = 50
 # ---------------------------------------------------------------------------
 POI_RADIUS_METERS = 1200   # ~15-min walk
 
-# Hard minimums (ZCTA eliminated if not met)
+# Hard minimums (block group eliminated if not met)
 MIN_GROCERY_COUNT = 1
 MIN_PHARMACY_COUNT = 1
 
@@ -104,7 +104,7 @@ SOUTH_JAN_LOW_MIN_F = 40
 # ---------------------------------------------------------------------------
 # Walk Score scraping (no API key needed)
 # ---------------------------------------------------------------------------
-SCRAPE_TOP_N = 75          # candidates per region to scrape from walkscore.com
+SCRAPE_TOP_N = 75          # legacy — no longer used as cutoff (all candidates scraped)
 SCRAPE_SLEEP_S = 3.0       # seconds between scrape requests (be polite)
 
 # ---------------------------------------------------------------------------
@@ -112,3 +112,29 @@ SCRAPE_SLEEP_S = 3.0       # seconds between scrape requests (be polite)
 # ---------------------------------------------------------------------------
 WALKSCORE_SLEEP_S = 0.2    # 5 req/sec max on free tier (unused if scraping)
 OSM_SLEEP_S = 1.0          # be polite to Overpass
+
+# ---------------------------------------------------------------------------
+# Geofabrik PBF downloads (offline OSM — replaces Overpass for step 4)
+# ---------------------------------------------------------------------------
+PBF_DIR = DATA_RAW / "pbf"
+GEOFABRIK_BASE_URL = "https://download.geofabrik.de/north-america/us"
+
+FIPS_TO_GEOFABRIK: dict[str, str] = {
+    "01": "alabama",        "02": "alaska",         "04": "arizona",
+    "05": "arkansas",       "06": "california",     "08": "colorado",
+    "09": "connecticut",    "10": "delaware",       "11": "district-of-columbia",
+    "12": "florida",        "13": "georgia",        "15": "hawaii",
+    "16": "idaho",          "17": "illinois",       "18": "indiana",
+    "19": "iowa",           "20": "kansas",         "21": "kentucky",
+    "22": "louisiana",      "23": "maine",          "24": "maryland",
+    "25": "massachusetts",  "26": "michigan",       "27": "minnesota",
+    "28": "mississippi",    "29": "missouri",       "30": "montana",
+    "31": "nebraska",       "32": "nevada",         "33": "new-hampshire",
+    "34": "new-jersey",     "35": "new-mexico",     "36": "new-york",
+    "37": "north-carolina", "38": "north-dakota",   "39": "ohio",
+    "40": "oklahoma",       "41": "oregon",         "42": "pennsylvania",
+    "44": "rhode-island",   "45": "south-carolina", "46": "south-dakota",
+    "47": "tennessee",      "48": "texas",          "49": "utah",
+    "50": "vermont",        "51": "virginia",       "53": "washington",
+    "54": "west-virginia",  "55": "wisconsin",      "56": "wyoming",
+}

@@ -2,11 +2,8 @@
 Step 2: Airport proximity filter (offline — Option B)
 ------------------------------------------------------
 Builds 60-minute drive-time isochrones around every qualifying commercial
-airport using osmnx, then keeps only ZCTAs whose centroid falls inside at
-least one isochrone.
-
-This avoids per-ZCTA API calls: we build an isochrone once per airport
-and do a single spatial join.
+airport using a radius buffer, then keeps only block groups whose centroid
+falls inside at least one isochrone.
 
 Outputs
 -------
@@ -56,8 +53,6 @@ OURAIRPORTS_HUB_MAP = {
 DRIVE_SPEED_MPH = 40
 # We compute a straight-line radius buffer as a fast approximation when
 # the full network-based isochrone is too slow for all airports.
-# For accuracy, we use the osmnx network approach for airports near
-# candidate ZCTAs; elsewhere a radius buffer suffices.
 MAX_DRIVE_DIST_METERS = MAX_AIRPORT_DRIVE_MIN * (DRIVE_SPEED_MPH * 1609.34 / 60)
 
 
@@ -136,16 +131,19 @@ def build_radius_isochrones(airports_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return isochrones[keep]
 
 
-def filter_zctas_by_airport(
-    zcta_gdf: gpd.GeoDataFrame,
+def filter_candidates_by_airport(
+    candidates_gdf: gpd.GeoDataFrame,
     isochrones: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     """
-    Spatial join: keep ZCTAs whose centroid is within any airport isochrone.
+    Spatial join: keep block groups whose centroid is within any airport isochrone.
     Adds nearest_airport and airport_drive_min_approx columns.
     """
-    centroids = zcta_gdf.copy()
-    centroids["geometry"] = zcta_gdf["geometry"].centroid
+    # Build point geometries from the pre-computed centroids (INTPTLAT/LON)
+    centroids = candidates_gdf.copy()
+    centroids["geometry"] = gpd.points_from_xy(
+        centroids["centroid_lon"], centroids["centroid_lat"]
+    )
 
     joined = gpd.sjoin(
         centroids,
@@ -154,8 +152,7 @@ def filter_zctas_by_airport(
         predicate="within",
     )
 
-    # If a ZCTA is near multiple airports, keep the one that's closest
-    # (approximated by straight-line distance to airport centroid)
+    # If a block group is near multiple airports, keep the closest
     if "lat_right" in joined.columns and "lon_right" in joined.columns:
         joined["_airport_lat"] = joined["lat_right"]
         joined["_airport_lon"] = joined["lon_right"]
@@ -171,7 +168,7 @@ def filter_zctas_by_airport(
         (joined["centroid_lat"] - joined["_airport_lat"]) ** 2 +
         (joined["centroid_lon"] - joined["_airport_lon"]) ** 2
     ) ** 0.5
-    # Pick best airport per ZCTA
+    # Pick best airport per block group
     joined = joined.sort_values("_dist_deg")
     joined = joined[~joined.index.duplicated(keep="first")]
 
@@ -190,7 +187,7 @@ def filter_zctas_by_airport(
     ).round(1)
 
     # Restore original polygon geometries
-    result = zcta_gdf.loc[joined.index].copy()
+    result = candidates_gdf.loc[joined.index].copy()
     for col in ["nearest_airport", "nearest_airport_iata", "airport_drive_min_approx"]:
         if col in joined.columns:
             result[col] = joined[col].values
@@ -212,14 +209,13 @@ def run() -> None:
     logger.info("Loading geo-filtered candidates…")
     north = gpd.read_file(north_in)
     south = gpd.read_file(south_in)
-    logger.info(f"North: {len(north):,} ZCTAs  |  South: {len(south):,} ZCTAs")
+    logger.info(f"North: {len(north):,} block groups  |  South: {len(south):,} block groups")
 
     airports = fetch_faa_airports()
     logger.info(f"Building {MAX_AIRPORT_DRIVE_MIN}-min drive isochrones for {len(airports):,} airports…")
     isochrones = build_radius_isochrones(airports)
 
     # Filter separately so we only join airports relevant to each band
-    # (slight speed-up; also avoids spurious matches from distant airports)
     north_airports = isochrones[
         isochrones.geometry.centroid.y.between(NORTH_LAT_MIN - 2, NORTH_LAT_MAX + 2)
     ]
@@ -227,13 +223,13 @@ def run() -> None:
         isochrones.geometry.centroid.y.between(SOUTH_LAT_MIN - 2, SOUTH_LAT_MAX + 2)
     ]
 
-    logger.info("Filtering north ZCTAs by airport proximity…")
-    north_filtered = filter_zctas_by_airport(north, north_airports)
-    logger.info(f"North: {len(north):,} → {len(north_filtered):,} ZCTAs within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
+    logger.info("Filtering north block groups by airport proximity…")
+    north_filtered = filter_candidates_by_airport(north, north_airports)
+    logger.info(f"North: {len(north):,} → {len(north_filtered):,} block groups within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
 
-    logger.info("Filtering south ZCTAs by airport proximity…")
-    south_filtered = filter_zctas_by_airport(south, south_airports)
-    logger.info(f"South: {len(south):,} → {len(south_filtered):,} ZCTAs within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
+    logger.info("Filtering south block groups by airport proximity…")
+    south_filtered = filter_candidates_by_airport(south, south_airports)
+    logger.info(f"South: {len(south):,} → {len(south_filtered):,} block groups within {MAX_AIRPORT_DRIVE_MIN} min of a commercial airport")
 
     north_out = DATA_PROCESSED / "north_airport_filtered.geojson"
     south_out = DATA_PROCESSED / "south_airport_filtered.geojson"

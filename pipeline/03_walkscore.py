@@ -1,13 +1,12 @@
 """
 Step 3: Walk Score + Bike Score (web scraping)
 ----------------------------------------------
-Scrapes walk/bike/transit scores from walkscore.com for top candidate ZCTAs.
+Scrapes walk/bike/transit scores from walkscore.com for candidate block groups.
 
 Two-pass design:
   Pass 1 (no prior amenity data): writes NaN scores so later steps can run.
-  Pass 2 (after step 4 has run): does a preliminary OSM-only ranking, scrapes
-    walk/bike scores for the top SCRAPE_TOP_N candidates per region, then
-    writes actual scores.
+  Pass 2 (after step 4 has run): scrapes walk/bike scores for ALL candidates
+    that passed amenity hard filters, then writes actual scores.
 
 Re-run the pipeline with `--from 3` after an initial full run to trigger
 the scraping pass.
@@ -32,7 +31,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from loguru import logger
 from config import (
     DATA_PROCESSED,
-    SCRAPE_TOP_N,
     SCRAPE_SLEEP_S,
     MIN_WALK_SCORE,
     MIN_BIKE_SCORE,
@@ -83,25 +81,6 @@ def scrape_walkscore(lat: float, lon: float) -> dict:
         return {"walk_score": None, "bike_score": None, "transit_score": None}
 
 
-def preliminary_rank(df: pd.DataFrame, n: int) -> pd.DataFrame:
-    """Quick rank using OSM amenity counts to pick top candidates for scraping."""
-    scored = pd.DataFrame(index=df.index)
-
-    for col, cap in [("grocery_count", 5), ("cafe_count", 10),
-                     ("restaurant_count", 30), ("pharmacy_count", 3)]:
-        if col in df.columns:
-            s = df[col].astype(float).clip(upper=cap)
-            s_max = s.max()
-            scored[col] = (s / s_max) if s_max > 0 else 0.5
-        else:
-            scored[col] = 0.5
-
-    df = df.copy()
-    df["_prelim_score"] = scored.mean(axis=1)
-    top = df.nlargest(n, "_prelim_score")
-    return top.drop(columns=["_prelim_score"])
-
-
 def run() -> None:
     north_in = DATA_PROCESSED / "north_airport_filtered.geojson"
     south_in = DATA_PROCESSED / "south_airport_filtered.geojson"
@@ -119,48 +98,53 @@ def run() -> None:
         # Load any previously scraped results
         if cache_path.exists():
             cached = pd.read_parquet(cache_path)
-            done_zips = set(cached["zcta"].astype(str))
+            done_ids = set(cached["geoid"].astype(str))
         else:
             cached = pd.DataFrame()
-            done_zips = set()
+            done_ids = set()
 
-        if amenity_path.exists() and len(done_zips) < SCRAPE_TOP_N:
-            # --- SCRAPE PASS: amenity data available, do preliminary ranking ---
+        if amenity_path.exists():
+            # --- SCRAPE PASS: amenity data available, scrape ALL candidates ---
             amenity_df = pd.read_parquet(amenity_path)
 
-            # Rank ALL candidates, take top N, then scrape only the uncached ones
-            top = preliminary_rank(amenity_df, SCRAPE_TOP_N)
-            to_scrape = top[~top["ZCTA5CE20"].astype(str).isin(done_zips)]
+            # Scrape every candidate that isn't already cached
+            to_scrape = amenity_df[~amenity_df["GEOID"].astype(str).isin(done_ids)]
 
-            logger.info(
-                f"{region.capitalize()}: scraping Walk Score for {len(to_scrape)} candidates "
-                f"({len(done_zips)} already cached, {SCRAPE_TOP_N} target)"
-            )
-
-            results = []
-            for _, row in tqdm(to_scrape.iterrows(), total=len(to_scrape),
-                               desc=f"Scrape {region}"):
-                scores = scrape_walkscore(row["centroid_lat"], row["centroid_lon"])
-                scores["zcta"] = str(row["ZCTA5CE20"])
-                results.append(scores)
-                time.sleep(SCRAPE_SLEEP_S)
-
-            if results:
-                new_df = pd.DataFrame(results)
-                combined = pd.concat([cached, new_df], ignore_index=True)
-                combined.to_parquet(cache_path, index=False)
-                scraped_count = new_df["walk_score"].notna().sum()
-                logger.info(f"Successfully scraped {scraped_count}/{len(new_df)} scores")
-            else:
+            if len(to_scrape) == 0:
+                logger.info(
+                    f"{region.capitalize()}: all {len(done_ids)} candidates already cached"
+                )
                 combined = cached
+            else:
+                logger.info(
+                    f"{region.capitalize()}: scraping Walk Score for {len(to_scrape)} candidates "
+                    f"({len(done_ids)} already cached)"
+                )
+
+                results = []
+                for _, row in tqdm(to_scrape.iterrows(), total=len(to_scrape),
+                                   desc=f"Scrape {region}"):
+                    scores = scrape_walkscore(row["centroid_lat"], row["centroid_lon"])
+                    scores["geoid"] = str(row["GEOID"])
+                    results.append(scores)
+                    time.sleep(SCRAPE_SLEEP_S)
+
+                if results:
+                    new_df = pd.DataFrame(results)
+                    combined = pd.concat([cached, new_df], ignore_index=True)
+                    combined.to_parquet(cache_path, index=False)
+                    scraped_count = new_df["walk_score"].notna().sum()
+                    logger.info(f"Successfully scraped {scraped_count}/{len(new_df)} scores")
+                else:
+                    combined = cached
 
             # Merge scores back to full candidate table
             base = gdf.drop(columns=["geometry"])
             if not combined.empty:
                 merged = base.merge(
-                    combined[["zcta", "walk_score", "bike_score", "transit_score"]],
-                    left_on="ZCTA5CE20", right_on="zcta", how="left"
-                ).drop(columns=["zcta"], errors="ignore")
+                    combined[["geoid", "walk_score", "bike_score", "transit_score"]],
+                    left_on="GEOID", right_on="geoid", how="left"
+                ).drop(columns=["geoid"], errors="ignore")
             else:
                 merged = base
                 merged["walk_score"] = float("nan")
@@ -176,7 +160,7 @@ def run() -> None:
             dropped = pre - len(merged)
             if dropped:
                 logger.info(
-                    f"{region.capitalize()}: dropped {dropped} ZCTAs below "
+                    f"{region.capitalize()}: dropped {dropped} block groups below "
                     f"Walk Score {MIN_WALK_SCORE} / Bike Score {MIN_BIKE_SCORE}"
                 )
 
@@ -187,9 +171,9 @@ def run() -> None:
             )
             base = gdf.drop(columns=["geometry"])
             merged = base.merge(
-                cached[["zcta", "walk_score", "bike_score", "transit_score"]],
-                left_on="ZCTA5CE20", right_on="zcta", how="left"
-            ).drop(columns=["zcta"], errors="ignore")
+                cached[["geoid", "walk_score", "bike_score", "transit_score"]],
+                left_on="GEOID", right_on="geoid", how="left"
+            ).drop(columns=["geoid"], errors="ignore")
 
             pre = len(merged)
             merged = merged[
@@ -199,7 +183,7 @@ def run() -> None:
             dropped = pre - len(merged)
             if dropped:
                 logger.info(
-                    f"{region.capitalize()}: dropped {dropped} ZCTAs below "
+                    f"{region.capitalize()}: dropped {dropped} block groups below "
                     f"Walk Score {MIN_WALK_SCORE} / Bike Score {MIN_BIKE_SCORE}"
                 )
 

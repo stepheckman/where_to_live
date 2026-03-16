@@ -18,13 +18,13 @@ from pipeline.log import setup as setup_logging
 
 
 STEPS = [
-    (1, "Geographic pre-filter (ZCTA lat bands + population density)",
+    (1, "Geographic pre-filter (block group lat bands + population density)",
      "pipeline.01_geo_filter"),
     (2, "Airport proximity filter (60-min drive isochrones)",
      "pipeline.02_airport_proximity"),
-    (3, "Walk Score + Bike Score (scrape walkscore.com for top candidates)",
+    (3, "Walk Score + Bike Score (scrape walkscore.com for all candidates)",
      "pipeline.03_walkscore"),
-    (4, "OSM amenities + affordability data (Zillow / HUD FMR)",
+    (4, "OSM amenities + affordability data (Census ACS / HUD FMR)",
      "pipeline.04_osm_amenities"),
     (5, "Composite scoring and ranking",
      "pipeline.05_score_and_rank"),
