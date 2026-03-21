@@ -88,17 +88,12 @@ def build_popup(row: pd.Series, region: str) -> str:
     bike = f"{row['bike_score']:.0f}" if pd.notna(row.get("bike_score")) else "N/A"
 
     affordability_row = ""
-    if region == "north" and "median_home_value" in row.index:
+    if "median_home_value" in row.index:
         src = row.get("home_value_source") or ""
         src_label = f" <span style='color:#888;font-size:11px'>({src})</span>" if src and src != "block_group" else ""
         affordability_row = (
             f"<tr><td><b>Median home value</b></td>"
             f"<td>{format_currency(row.get('median_home_value'))}{src_label}</td></tr>"
-        )
-    elif region == "south" and "fmr_2br_rent" in row.index:
-        affordability_row = (
-            f"<tr><td><b>2-bed rent/month</b></td>"
-            f"<td>{format_currency(row.get('fmr_2br_rent'))}/mo</td></tr>"
         )
 
     airport_info = row.get("nearest_airport", "N/A")
@@ -225,7 +220,7 @@ def run() -> None:
     )
 
     north_group = folium.FeatureGroup(name="North candidates (buy)", show=True)
-    south_group = folium.FeatureGroup(name="South candidates (rent)", show=True)
+    south_group = folium.FeatureGroup(name="South candidates", show=True)
 
     for _, row in north_df.iterrows():
         color = score_to_color(row["composite_score"])

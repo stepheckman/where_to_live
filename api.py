@@ -135,8 +135,6 @@ def _score_and_filter(
         "centroid_lon": "lon",
         "airport_drive_min_approx": "airport_drive_min",
     }
-    if region == "south":
-        rename["fmr_2br"] = "fmr_2br_rent"
     df = df.rename(columns={k: v for k, v in rename.items() if k in df.columns})
 
     # Hard filters
@@ -179,10 +177,9 @@ def _score_and_filter(
     else:
         df["n_hiking"] = pd.Series(np.nan, index=df.index)
 
-    afford_col = "median_home_value" if region == "north" else "fmr_2br_rent"
     df["n_afford"] = (
-        _normalize(df[afford_col], invert=True)
-        if afford_col in df.columns
+        _normalize(df["median_home_value"], invert=True)
+        if "median_home_value" in df.columns
         else pd.Series(np.nan, index=df.index)
     )
 

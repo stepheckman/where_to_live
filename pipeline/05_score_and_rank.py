@@ -4,9 +4,8 @@ Step 5: Composite Scoring and Ranking
 Normalizes all signals to [0, 1], applies weights from config.py,
 and produces the final ranked candidate lists.
 
-For north (buying): home value (Census ACS B25077) is scored inversely —
-  lower value → higher score, since affordability matters.
-For south (renting): FMR 2BR rent is scored inversely for the same reason.
+For both regions: home value (Census ACS B25077 via Zillow ZHVI) is scored
+  inversely — lower value → higher score, since affordability matters.
 
 If Walk Score is missing (not yet scraped), weights are redistributed to OSM signals.
 
@@ -29,7 +28,7 @@ from config import (
     OUTPUTS,
     TOP_N,
     W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY, W_TRANSIT, W_HIKING,
-    W_HOME_VALUE, W_RENT,
+    W_HOME_VALUE,
     CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY, CAP_TRANSIT,
     MIN_WALK_SCORE, MIN_BIKE_SCORE,
 )
@@ -89,12 +88,9 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         df["n_hiking"] = np.nan
         hiking_weight = 0.0
 
-    if region == "north" and "median_home_value" in df.columns:
+    if "median_home_value" in df.columns:
         df["n_affordability"] = normalize_col(df["median_home_value"], invert=True)
         affordability_weight = W_HOME_VALUE
-    elif region == "south" and "fmr_2br" in df.columns:
-        df["n_affordability"] = normalize_col(df["fmr_2br"], invert=True)
-        affordability_weight = W_RENT
     else:
         df["n_affordability"] = np.nan
         affordability_weight = 0.0
@@ -177,10 +173,7 @@ def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "airport_drive_min_approx": "airport_drive_min",
         "composite_score": "composite_score",
     }
-    if region == "north":
-        cols["median_home_value"] = "median_home_value"
-    elif region == "south":
-        cols["fmr_2br"] = "fmr_2br_rent"
+    cols["median_home_value"] = "median_home_value"
 
     present = {k: v for k, v in cols.items() if k in df.columns}
     out = df.rename(columns=present)[[v for v in present.values()]]
@@ -207,8 +200,7 @@ def run() -> None:
         logger.success(f"Top {len(top)} {region} candidates saved to {out_path}")
         logger.debug("\n" + top[["geoid", "composite_score"] +
               (["walk_score"] if "walk_score" in top.columns else []) +
-              (["median_home_value"] if "median_home_value" in top.columns else []) +
-              (["fmr_2br_rent"] if "fmr_2br_rent" in top.columns else [])
+              (["median_home_value"] if "median_home_value" in top.columns else [])
               ].head(10).to_string(index=False))
 
 

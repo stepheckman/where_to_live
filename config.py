@@ -82,11 +82,9 @@ W_PHARMACY = 0.05
 W_TRANSIT = 0.05     # public transit stops within 1 mile
 W_HIKING = 0.10      # PAD-US protected area proximity
 
-# Region-specific affordability signals (remaining 0.10 after base+hiking)
-# North: home value (Zillow ZHVI) — lower is better
+# Affordability signal (Zillow ZHVI median home value) — lower is better
+# Used for both north and south regions
 W_HOME_VALUE = 0.10
-# South: rent affordability (HUD FMR 2BR) — lower is better
-W_RENT = 0.10
 
 # ---------------------------------------------------------------------------
 # Output

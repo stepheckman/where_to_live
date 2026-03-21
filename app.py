@@ -127,8 +127,8 @@ if north_raw is None or south_raw is None:
 _missing = []
 if north_raw["walk_score"].isna().all():
     _missing.append("**Walk/Bike scores** (re-run step 3 after step 4 to scrape)")
-if "fmr_2br" not in south_raw.columns:
-    _missing.append("**South rent data** (re-run step 4 to fetch HUD FMR)")
+if "median_home_value" not in south_raw.columns:
+    _missing.append("**South affordability data** (re-run step 4 to fetch Zillow ZHVI)")
 if _missing:
     st.info(
         "Some data is missing — affordability/walkability weights are auto-zeroed "
@@ -276,10 +276,9 @@ def score_and_filter(
     else:
         df["n_hiking"] = pd.Series(np.nan, index=df.index)
 
-    afford_col = "median_home_value" if region == "north" else "fmr_2br"
     df["n_afford"] = (
-        _normalize(df[afford_col], invert=True)
-        if afford_col in df.columns
+        _normalize(df["median_home_value"], invert=True)
+        if "median_home_value" in df.columns
         else pd.Series(np.nan, index=df.index)
     )
 
@@ -321,10 +320,7 @@ def _rename_for_display(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "centroid_lon": "lon",
         "airport_drive_min_approx": "airport_drive_min",
     }
-    if region == "north":
-        renames["median_home_value"] = "median_home_value"
-    else:
-        renames["fmr_2br"] = "fmr_2br_rent"
+    renames["median_home_value"] = "median_home_value"
     present = {k: v for k, v in renames.items() if k in df.columns}
     return df.rename(columns=present)
 
@@ -349,14 +345,11 @@ def _build_popup(row: pd.Series, region: str) -> str:
     walk = f"{row['walk_score']:.0f}" if pd.notna(row.get("walk_score")) else "N/A"
     bike = f"{row['bike_score']:.0f}" if pd.notna(row.get("bike_score")) else "N/A"
 
-    if region == "north" and "median_home_value" in row.index:
+    if "median_home_value" in row.index:
         v = row.get("median_home_value")
         src = row.get("home_value_source") or ""
         src_label = f" <span style='color:#888;font-size:11px'>({src})</span>" if src and src != "block_group" else ""
         afford_row = f"<tr><td><b>Median home value</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}{src_label}</td></tr>"
-    elif region == "south" and "fmr_2br_rent" in row.index:
-        v = row.get("fmr_2br_rent")
-        afford_row = f"<tr><td><b>2-bed rent/month</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
     else:
         afford_row = ""
 
@@ -451,7 +444,7 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
 
     north_group = folium.FeatureGroup(name="North — buy", show=True)
-    south_group = folium.FeatureGroup(name="South — rent", show=True)
+    south_group = folium.FeatureGroup(name="South", show=True)
 
     for _, row in north_df.iterrows():
         geoid = row.get("geoid", "")
@@ -495,7 +488,7 @@ DISPLAY_COLS = {
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "transit_stops", "dist_nearest_park_km", "parks_within_50km",
-        "fmr_2br_rent", "nearest_airport", "airport_drive_min",
+        "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
     ],
 }
 
@@ -513,7 +506,6 @@ COLUMN_CONFIG = {
     "parks_within_50km":    st.column_config.NumberColumn("Protected Areas (<50 km)", format="%d"),
     "median_home_value":    st.column_config.NumberColumn("Median Home Value",       format="$%,.0f"),
     "home_value_source":    st.column_config.TextColumn("Home Value Source"),
-    "fmr_2br_rent":         st.column_config.NumberColumn("2-Bed Rent/Month",        format="$%,.0f"),
     "airport_drive_min":    st.column_config.NumberColumn("Drive to Airport (min)",  format="%.0f"),
 }
 

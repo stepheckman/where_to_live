@@ -24,7 +24,7 @@ STEPS = [
      "pipeline.02_airport_proximity"),
     (3, "Walk Score + Bike Score (scrape walkscore.com for all candidates)",
      "pipeline.03_walkscore"),
-    (4, "OSM amenities + affordability data (Census ACS / HUD FMR)",
+    (4, "OSM amenities + affordability data (Census ACS / Zillow ZHVI)",
      "pipeline.04_osm_amenities"),
     (5, "Composite scoring and ranking",
      "pipeline.05_score_and_rank"),

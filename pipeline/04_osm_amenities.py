@@ -6,7 +6,7 @@ centroid using the Overpass API (via osmnx). Results are cached.
 
 Also pulls affordability data:
   - North (buy): Census ACS median home value (B25077) by block group
-  - South (rent): HUD Fair Market Rents 2BR by county (extracted from GEOID)
+  - South (rent): Zillow ZHVI median home value by block group (same as north)
 
 And hiking access data:
   - PAD-US (USGS Protected Areas Database): distance to nearest qualifying
@@ -84,12 +84,6 @@ CENSUS_ZCTA_TRACT_URL = (
     "https://www2.census.gov/geo/docs/maps-data/data/rel2020/"
     "zcta520/tab20_zcta520_tract20_natl.txt"
 )
-
-# HUD Fair Market Rents (FY2024) — county-level, 2BR
-HUD_FMR_URL = (
-    "https://www.huduser.gov/portal/datasets/fmr/fmr2024/FY2024_4050_FMR.xlsx"
-)
-
 
 # ---------------------------------------------------------------------------
 # Geofabrik PBF download + offline POI extraction
@@ -796,9 +790,6 @@ def fetch_hud_fmr() -> pd.DataFrame:
     result["fmr_2br"] = pd.to_numeric(result["fmr_2br"], errors="coerce")
 
     result.to_parquet(cache, index=False)
-    logger.debug(f"Cached HUD FMR for {len(result):,} counties")
-    return result
-
 
 # ---------------------------------------------------------------------------
 # PAD-US hiking access (USGS Protected Areas Database)
@@ -1022,13 +1013,16 @@ def run() -> None:
         ).drop(columns=["geoid"], errors="ignore")
         df["transit_stops"] = df["transit_stops"].fillna(0).astype(int)
 
-    # Affordability signals
-    # Determine which state FIPS codes are needed from north candidates
+    # Affordability signals (Zillow ZHVI median home value — used for both regions)
+    # Collect state FIPS codes from both north and south candidates
     north_ws = pd.read_parquet(DATA_PROCESSED / "north_walkscored.parquet")
-    north_states = sorted(north_ws["GEOID"].astype(str).str[:2].unique())
+    south_ws = pd.read_parquet(DATA_PROCESSED / "south_walkscored.parquet")
+    all_states = sorted(set(
+        north_ws["GEOID"].astype(str).str[:2].tolist() +
+        south_ws["GEOID"].astype(str).str[:2].tolist()
+    ))
 
-    home_values = fetch_acs_home_value(north_states)
-    hud = fetch_hud_fmr()
+    home_values = fetch_acs_home_value(all_states)
 
     # Hiking scores — computed once across all candidates combined
     all_candidates = pd.concat([
@@ -1082,24 +1076,14 @@ def run() -> None:
                 f"{df['dist_nearest_park_km'].notna().sum():,}/{len(df):,} block groups"
             )
 
-        if region == "north" and not home_values.empty:
+        if not home_values.empty:
             df = df.merge(home_values, on="GEOID", how="left")
             n_bg = int(df["median_home_value"].notna().sum())
             logger.info(
-                f"North: Census ACS home value joined for "
+                f"{region.capitalize()}: Census ACS home value joined for "
                 f"{n_bg:,}/{len(df):,} block groups"
             )
-            df = fill_missing_home_values(df, north_states)
-
-        if region == "south" and not hud.empty:
-            # Extract county FIPS (first 5 digits of block group GEOID)
-            df["fips_county"] = df["GEOID"].astype(str).str[:5]
-            df = df.merge(hud, on="fips_county", how="left")
-            df = df.drop(columns=["fips_county"], errors="ignore")
-            logger.info(
-                f"South: HUD FMR joined for "
-                f"{df['fmr_2br'].notna().sum():,}/{len(df):,} block groups"
-            )
+            df = fill_missing_home_values(df, all_states)
 
         out_path = DATA_PROCESSED / f"{region}_amenities.parquet"
         df.to_parquet(out_path, index=False)
