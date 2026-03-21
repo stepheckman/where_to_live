@@ -89,9 +89,11 @@ def build_popup(row: pd.Series, region: str) -> str:
 
     affordability_row = ""
     if region == "north" and "median_home_value" in row.index:
+        src = row.get("home_value_source") or ""
+        src_label = f" <span style='color:#888;font-size:11px'>({src})</span>" if src and src != "block_group" else ""
         affordability_row = (
             f"<tr><td><b>Median home value</b></td>"
-            f"<td>{format_currency(row.get('median_home_value'))}</td></tr>"
+            f"<td>{format_currency(row.get('median_home_value'))}{src_label}</td></tr>"
         )
     elif region == "south" and "fmr_2br_rent" in row.index:
         affordability_row = (

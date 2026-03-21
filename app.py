@@ -351,7 +351,9 @@ def _build_popup(row: pd.Series, region: str) -> str:
 
     if region == "north" and "median_home_value" in row.index:
         v = row.get("median_home_value")
-        afford_row = f"<tr><td><b>Median home value</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
+        src = row.get("home_value_source") or ""
+        src_label = f" <span style='color:#888;font-size:11px'>({src})</span>" if src and src != "block_group" else ""
+        afford_row = f"<tr><td><b>Median home value</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}{src_label}</td></tr>"
     elif region == "south" and "fmr_2br_rent" in row.index:
         v = row.get("fmr_2br_rent")
         afford_row = f"<tr><td><b>2-bed rent/month</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
@@ -487,7 +489,7 @@ DISPLAY_COLS = {
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "transit_stops", "dist_nearest_park_km", "parks_within_50km",
-        "median_home_value", "nearest_airport", "airport_drive_min",
+        "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
     ],
     "south": [
         "geoid", "city", "composite_score", "walk_score", "bike_score",
@@ -510,6 +512,7 @@ COLUMN_CONFIG = {
     "dist_nearest_park_km": st.column_config.NumberColumn("Nearest Park (km)",       format="%.1f"),
     "parks_within_50km":    st.column_config.NumberColumn("Protected Areas (<50 km)", format="%d"),
     "median_home_value":    st.column_config.NumberColumn("Median Home Value",       format="$%,.0f"),
+    "home_value_source":    st.column_config.TextColumn("Home Value Source"),
     "fmr_2br_rent":         st.column_config.NumberColumn("2-Bed Rent/Month",        format="$%,.0f"),
     "airport_drive_min":    st.column_config.NumberColumn("Drive to Airport (min)",  format="%.0f"),
 }

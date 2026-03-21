@@ -67,6 +67,24 @@ ACS_HOME_VALUE_URL = (
     "&for=block%20group:*&in=state:{fips}&in=county:*&in=tract:*"
 )
 
+# Fallback: tract-level and ZCTA-level ACS home value
+ACS_TRACT_HOME_VALUE_URL = (
+    "https://api.census.gov/data/2022/acs/acs5"
+    "?get=B25077_001E"
+    "&for=tract:*&in=state:{fips}&in=county:*"
+)
+ACS_ZCTA_HOME_VALUE_URL = (
+    "https://api.census.gov/data/2022/acs/acs5"
+    "?get=B25077_001E"
+    "&for=zip%20code%20tabulation%20area:*"
+)
+
+# Census 2020 ZCTA-to-tract relationship file (used for BG→ZCTA fallback via tract)
+CENSUS_ZCTA_TRACT_URL = (
+    "https://www2.census.gov/geo/docs/maps-data/data/rel2020/"
+    "zcta520/tab20_zcta520_tract20_natl.txt"
+)
+
 # HUD Fair Market Rents (FY2024) — county-level, 2BR
 HUD_FMR_URL = (
     "https://www.huduser.gov/portal/datasets/fmr/fmr2024/FY2024_4050_FMR.xlsx"
@@ -561,6 +579,182 @@ def fetch_acs_home_value(state_fips_list: list[str]) -> pd.DataFrame:
     return hv
 
 
+def fetch_acs_tract_home_value(state_fips_list: list[str]) -> pd.DataFrame:
+    """
+    Download Census ACS B25077_001E (median home value) at tract level.
+    Returns DataFrame with columns: tract_geoid (11-digit), median_home_value_tract
+    """
+    cache = DATA_RAW / "tract_home_value.parquet"
+    if cache.exists():
+        logger.debug("Census ACS tract home value data already cached.")
+        return pd.read_parquet(cache)
+
+    logger.info("Fetching ACS median home value for tracts…")
+    frames = []
+    for fips in tqdm(state_fips_list, desc="ACS tract home value"):
+        url = ACS_TRACT_HOME_VALUE_URL.format(fips=fips)
+        try:
+            resp = requests.get(url, timeout=60)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.warning(f"ACS tract home value fetch failed for state {fips}: {e}")
+            continue
+        cols = data[0]
+        rows = data[1:]
+        frames.append(pd.DataFrame(rows, columns=cols))
+
+    if not frames:
+        logger.warning("No ACS tract home value data fetched.")
+        return pd.DataFrame(columns=["tract_geoid", "median_home_value_tract"])
+
+    hv = pd.concat(frames, ignore_index=True)
+    hv["tract_geoid"] = hv["state"] + hv["county"] + hv["tract"]
+    hv["median_home_value_tract"] = pd.to_numeric(hv["B25077_001E"], errors="coerce")
+    hv.loc[hv["median_home_value_tract"] < 0, "median_home_value_tract"] = float("nan")
+    hv = hv[["tract_geoid", "median_home_value_tract"]]
+
+    hv.to_parquet(cache, index=False)
+    logger.debug(f"Cached home values for {len(hv):,} tracts")
+    return hv
+
+
+def fetch_acs_zcta_home_value() -> pd.DataFrame:
+    """
+    Download Census ACS B25077_001E (median home value) at ZCTA level.
+    Returns DataFrame with columns: zcta (5-digit), median_home_value_zcta
+    """
+    cache = DATA_RAW / "zcta_home_value.parquet"
+    if cache.exists():
+        logger.debug("Census ACS ZCTA home value data already cached.")
+        return pd.read_parquet(cache)
+
+    logger.info("Fetching ACS median home value for ZCTAs…")
+    try:
+        resp = requests.get(ACS_ZCTA_HOME_VALUE_URL, timeout=120)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        logger.warning(f"ACS ZCTA home value fetch failed: {e}")
+        return pd.DataFrame(columns=["zcta", "median_home_value_zcta"])
+
+    cols = data[0]
+    rows = data[1:]
+    hv = pd.DataFrame(rows, columns=cols)
+    zcta_col = next((c for c in cols if "zip" in c.lower() or "zcta" in c.lower()), None)
+    if zcta_col is None:
+        logger.warning(f"ZCTA column not found in ACS response. Columns: {cols}")
+        return pd.DataFrame(columns=["zcta", "median_home_value_zcta"])
+
+    hv["zcta"] = hv[zcta_col].astype(str).str.zfill(5)
+    hv["median_home_value_zcta"] = pd.to_numeric(hv["B25077_001E"], errors="coerce")
+    hv.loc[hv["median_home_value_zcta"] < 0, "median_home_value_zcta"] = float("nan")
+    hv = hv[["zcta", "median_home_value_zcta"]]
+
+    hv.to_parquet(cache, index=False)
+    logger.debug(f"Cached home values for {len(hv):,} ZCTAs")
+    return hv
+
+
+def fetch_zcta_tract_crosswalk() -> pd.DataFrame:
+    """
+    Download the Census 2020 ZCTA-to-tract relationship file.
+    Returns DataFrame with columns: tract_geoid (11-digit), zcta (5-digit).
+    When a tract spans multiple ZCTAs, the ZCTA with the most land area wins.
+    """
+    cache = DATA_RAW / "zcta_tract_crosswalk.parquet"
+    if cache.exists():
+        logger.debug("ZCTA-tract crosswalk already cached.")
+        return pd.read_parquet(cache)
+
+    logger.info("Downloading ZCTA→tract crosswalk…")
+    try:
+        resp = requests.get(CENSUS_ZCTA_TRACT_URL, timeout=120)
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning(f"ZCTA-tract crosswalk download failed: {e}")
+        return pd.DataFrame(columns=["tract_geoid", "zcta"])
+
+    df = pd.read_csv(io.StringIO(resp.text), sep="|", dtype=str)
+    zcta_col = next((c for c in df.columns if "ZCTA5" in c), None)
+    tract_col = next((c for c in df.columns if "TRACT" in c), None)
+    if zcta_col is None or tract_col is None:
+        logger.warning(f"Expected ZCTA5/TRACT columns not found. Got: {list(df.columns)}")
+        return pd.DataFrame(columns=["tract_geoid", "zcta"])
+
+    df = df.rename(columns={zcta_col: "zcta", tract_col: "tract_geoid"})
+    df["zcta"] = df["zcta"].astype(str).str.zfill(5)
+    df["tract_geoid"] = df["tract_geoid"].astype(str).str.strip()
+
+    # When a tract spans multiple ZCTAs, keep the one with the most land area
+    area_col = next((c for c in df.columns if "AREALAND" in c.upper()), None)
+    if area_col:
+        df[area_col] = pd.to_numeric(df[area_col], errors="coerce").fillna(0)
+        df = df.sort_values(area_col, ascending=False)
+    df = df.drop_duplicates(subset="tract_geoid", keep="first")[["tract_geoid", "zcta"]]
+
+    df.to_parquet(cache, index=False)
+    logger.debug(f"Cached ZCTA-tract crosswalk for {len(df):,} tracts")
+    return df
+
+
+def fill_missing_home_values(df: pd.DataFrame, state_fips_list: list[str]) -> pd.DataFrame:
+    """
+    Fill NaN median_home_value entries by falling back to tract then ZCTA geography.
+    Also initializes/updates the home_value_source column:
+      "block_group" — original BG-level ACS value
+      "tract"       — filled from tract-level ACS
+      "zcta"        — filled from ZCTA-level ACS
+      None          — still missing after all fallbacks
+    Block-group values are always preferred and never overwritten.
+    """
+    # Initialise source column: credit existing values to block_group
+    df["home_value_source"] = None
+    df.loc[df["median_home_value"].notna(), "home_value_source"] = "block_group"
+
+    n_missing = int(df["median_home_value"].isna().sum())
+    if n_missing == 0:
+        logger.info("Home value fallback: no missing values to fill")
+        return df
+
+    # --- Tract fallback (BG GEOID first 11 chars = tract GEOID) ---
+    n_tract = 0
+    tract_hv = fetch_acs_tract_home_value(state_fips_list)
+    if not tract_hv.empty:
+        df["_tract_geoid"] = df["GEOID"].astype(str).str[:11]
+        df = df.merge(tract_hv, left_on="_tract_geoid", right_on="tract_geoid", how="left")
+        fill_mask = df["median_home_value"].isna() & df["median_home_value_tract"].notna()
+        df.loc[fill_mask, "median_home_value"] = df.loc[fill_mask, "median_home_value_tract"]
+        df.loc[fill_mask, "home_value_source"] = "tract"
+        n_tract = int(fill_mask.sum())
+        df = df.drop(columns=["_tract_geoid", "tract_geoid", "median_home_value_tract"], errors="ignore")
+
+    # --- ZCTA fallback (tract → ZCTA via relationship file) ---
+    n_zcta = 0
+    if df["median_home_value"].isna().sum() > 0:
+        zcta_hv = fetch_acs_zcta_home_value()
+        zcta_xw = fetch_zcta_tract_crosswalk()
+        if not zcta_hv.empty and not zcta_xw.empty:
+            df["_tract_geoid"] = df["GEOID"].astype(str).str[:11]
+            df = df.merge(zcta_xw, left_on="_tract_geoid", right_on="tract_geoid", how="left")
+            df = df.merge(zcta_hv, on="zcta", how="left")
+            fill_mask = df["median_home_value"].isna() & df["median_home_value_zcta"].notna()
+            df.loc[fill_mask, "median_home_value"] = df.loc[fill_mask, "median_home_value_zcta"]
+            df.loc[fill_mask, "home_value_source"] = "zcta"
+            n_zcta = int(fill_mask.sum())
+            df = df.drop(
+                columns=["_tract_geoid", "tract_geoid", "zcta", "median_home_value_zcta"],
+                errors="ignore",
+            )
+
+    n_remaining = int(df["median_home_value"].isna().sum())
+    logger.info(
+        f"Home value fallback: filled {n_tract:,} from tract, "
+        f"{n_zcta:,} from ZCTA, {n_remaining:,} still missing"
+    )
+    return df
+
+
 # ---------------------------------------------------------------------------
 # HUD Fair Market Rents (south — renting)
 # ---------------------------------------------------------------------------
@@ -890,10 +1084,12 @@ def run() -> None:
 
         if region == "north" and not home_values.empty:
             df = df.merge(home_values, on="GEOID", how="left")
+            n_bg = int(df["median_home_value"].notna().sum())
             logger.info(
                 f"North: Census ACS home value joined for "
-                f"{df['median_home_value'].notna().sum():,}/{len(df):,} block groups"
+                f"{n_bg:,}/{len(df):,} block groups"
             )
+            df = fill_missing_home_values(df, north_states)
 
         if region == "south" and not hud.empty:
             # Extract county FIPS (first 5 digits of block group GEOID)
