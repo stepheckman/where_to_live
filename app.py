@@ -15,6 +15,7 @@ from pathlib import Path
 import folium
 import numpy as np
 import pandas as pd
+import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -58,6 +59,44 @@ st.caption(
     "Adjust filters and weights in the sidebar; the map and table update instantly. "
     "Data comes from the cached pipeline outputs (steps 1–4)."
 )
+
+# ---------------------------------------------------------------------------
+# Reverse geocoding (cached per location so it only runs once per lat/lon)
+# ---------------------------------------------------------------------------
+def _reverse_geocode_city(lat: float, lon: float) -> str:
+    """Return 'City, State' for a lat/lon via OSM Nominatim (free, no key)."""
+    try:
+        resp = requests.get(
+            "https://nominatim.openstreetmap.org/reverse",
+            params={"lat": lat, "lon": lon, "format": "json"},
+            headers={"User-Agent": "where-to-live-app/1.0"},
+            timeout=10,
+        )
+        addr = resp.json().get("address", {})
+        city = (
+            addr.get("city") or addr.get("town")
+            or addr.get("village") or addr.get("county", "")
+        )
+        state = addr.get("state", "")
+        return f"{city}, {state}".strip(", ")
+    except Exception:
+        return ""
+
+
+@st.cache_data(show_spinner=False)
+def _geocode_one(lat: float, lon: float) -> str:
+    """Cached single-location reverse geocode."""
+    return _reverse_geocode_city(lat, lon)
+
+
+def _enrich_with_city(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a 'city' column to a display df (must have 'lat'/'lon' columns)."""
+    if "city" in df.columns:
+        return df
+    df = df.copy()
+    df["city"] = [_geocode_one(row["lat"], row["lon"]) for _, row in df.iterrows()]
+    return df
+
 
 # ---------------------------------------------------------------------------
 # Load cached step-4 data
@@ -303,10 +342,10 @@ def _build_popup(row: pd.Series, region: str) -> str:
 
     if region == "north" and "median_home_value" in row.index:
         v = row.get("median_home_value")
-        afford_row = f"<tr><td><b>Median home</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
+        afford_row = f"<tr><td><b>Median home value</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
     elif region == "south" and "fmr_2br_rent" in row.index:
         v = row.get("fmr_2br_rent")
-        afford_row = f"<tr><td><b>2BR rent/mo</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
+        afford_row = f"<tr><td><b>2-bed rent/month</b></td><td>{'N/A' if pd.isna(v) else f'${v:,.0f}'}</td></tr>"
     else:
         afford_row = ""
 
@@ -315,26 +354,34 @@ def _build_popup(row: pd.Series, region: str) -> str:
     airport_str = f"{airport} (~{drive:.0f} min)" if pd.notna(drive) else str(airport)
 
     geoid = row.get("geoid", "")
+    city = row.get("city", "") or ""
+    city_line = f'<div style="font-size:13px;color:#555;margin-bottom:4px;">{city}</div>' if city else ""
+
+    park_dist = row.get("dist_nearest_park_km")
+    park_dist_str = "N/A" if pd.isna(park_dist) else f"{park_dist:.1f} km away"
+    parks_nearby = row.get("parks_within_50km")
+    parks_nearby_str = "N/A" if pd.isna(parks_nearby) else str(int(parks_nearby))
 
     return f"""
-    <div style="font-family:sans-serif;width:280px;">
-      <h4 style="margin:0 0 6px 0;">BG {geoid}</h4>
+    <div style="font-family:sans-serif;width:300px;">
+      <h4 style="margin:0 0 2px 0;">BG {geoid}</h4>
+      {city_line}
       <table style="border-collapse:collapse;width:100%;">
         <tr style="background:#f5f5f5;">
           <td colspan="2" style="padding:4px 6px;font-weight:bold;font-size:15px;">
             Score: {row['composite_score']:.1f} / 100
           </td>
         </tr>
-        <tr><td><b>Walk</b></td><td>{walk}</td></tr>
-        <tr><td><b>Bike</b></td><td>{bike}</td></tr>
-        <tr><td><b>Grocery</b></td><td>{int(row.get('grocery_count', 0))}</td></tr>
-        <tr><td><b>Café</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
-        <tr><td><b>Restaurant</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
-        <tr><td><b>Pharmacy</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
+        <tr><td><b>Walk Score (0–100)</b></td><td>{walk}</td></tr>
+        <tr><td><b>Bike Score (0–100)</b></td><td>{bike}</td></tr>
+        <tr><td><b>Grocery stores (¾ mi)</b></td><td>{int(row.get('grocery_count', 0))}</td></tr>
+        <tr><td><b>Cafés (¾ mi)</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
+        <tr><td><b>Restaurants (¾ mi)</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
+        <tr><td><b>Pharmacies (¾ mi)</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
         {afford_row}
-        <tr><td><b>Park dist</b></td><td>{'N/A' if pd.isna(row.get('dist_nearest_park_km')) else f"{row['dist_nearest_park_km']:.1f} km"}</td></tr>
-        <tr><td><b>Parks &lt;50km</b></td><td>{int(row.get('parks_within_50km', 0)) if pd.notna(row.get('parks_within_50km')) else 'N/A'}</td></tr>
-        <tr><td><b>Airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
+        <tr><td><b>Nearest park</b></td><td>{park_dist_str}</td></tr>
+        <tr><td><b>Protected areas (&lt;50 km)</b></td><td>{parks_nearby_str}</td></tr>
+        <tr><td><b>Drive to airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>
       <div style="margin-top:8px;">
         <a href="{gmaps}" target="_blank" style="margin-right:8px;color:#3498db;">Google Maps</a>
@@ -366,6 +413,7 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
     for _, row in df.iterrows():
         geoid = row.get("geoid", "")
+        city_label = row.get("city") or f"BG {geoid}"
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9,
@@ -374,8 +422,8 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
             fill=True,
             fill_color=_score_color(row["composite_score"]),
             fill_opacity=0.85,
-            popup=folium.Popup(_build_popup(row, region), max_width=300),
-            tooltip=f"BG {geoid} — {row['composite_score']:.1f}",
+            popup=folium.Popup(_build_popup(row, region), max_width=320),
+            tooltip=f"{city_label} — Score: {row['composite_score']:.1f}",
         ).add_to(m)
     return m._repr_html_()
 
@@ -395,22 +443,24 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
 
     for _, row in north_df.iterrows():
         geoid = row.get("geoid", "")
+        city_label = row.get("city") or f"BG {geoid}"
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
-            popup=folium.Popup(_build_popup(row, "north"), max_width=300),
-            tooltip=f"[N] BG {geoid} — {row['composite_score']:.1f}",
+            popup=folium.Popup(_build_popup(row, "north"), max_width=320),
+            tooltip=f"[N] {city_label} — Score: {row['composite_score']:.1f}",
         ).add_to(north_group)
 
     for _, row in south_df.iterrows():
         geoid = row.get("geoid", "")
+        city_label = row.get("city") or f"BG {geoid}"
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=9, color="white", weight=1.5,
             fill=True, fill_color=_score_color(row["composite_score"]), fill_opacity=0.85,
-            popup=folium.Popup(_build_popup(row, "south"), max_width=300),
-            tooltip=f"[S] BG {geoid} — {row['composite_score']:.1f}",
+            popup=folium.Popup(_build_popup(row, "south"), max_width=320),
+            tooltip=f"[S] {city_label} — Score: {row['composite_score']:.1f}",
         ).add_to(south_group)
 
     north_group.add_to(m)
@@ -424,13 +474,13 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
 # ---------------------------------------------------------------------------
 DISPLAY_COLS = {
     "north": [
-        "geoid", "composite_score", "walk_score", "bike_score",
+        "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "nearest_airport", "airport_drive_min",
     ],
     "south": [
-        "geoid", "composite_score", "walk_score", "bike_score",
+        "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "dist_nearest_park_km", "parks_within_50km",
         "fmr_2br_rent", "nearest_airport", "airport_drive_min",
@@ -438,18 +488,19 @@ DISPLAY_COLS = {
 }
 
 COLUMN_CONFIG = {
-    "composite_score":      st.column_config.NumberColumn("Score",          format="%.1f"),
-    "walk_score":           st.column_config.NumberColumn("Walk",           format="%.0f"),
-    "bike_score":           st.column_config.NumberColumn("Bike",           format="%.0f"),
-    "grocery_count":        st.column_config.NumberColumn("Grocery",        format="%d"),
-    "cafe_count":           st.column_config.NumberColumn("Café",           format="%d"),
-    "restaurant_count":     st.column_config.NumberColumn("Restaurant",     format="%d"),
-    "pharmacy_count":       st.column_config.NumberColumn("Pharmacy",       format="%d"),
-    "dist_nearest_park_km": st.column_config.NumberColumn("Park dist (km)", format="%.1f"),
-    "parks_within_50km":    st.column_config.NumberColumn("Parks <50km",    format="%d"),
-    "median_home_value":    st.column_config.NumberColumn("Home Value",     format="$%,.0f"),
-    "fmr_2br_rent":         st.column_config.NumberColumn("2BR Rent/mo",    format="$%,.0f"),
-    "airport_drive_min":    st.column_config.NumberColumn("Airport (min)",  format="%.0f"),
+    "city":                 st.column_config.TextColumn("City, State"),
+    "composite_score":      st.column_config.NumberColumn("Score",                  format="%.1f"),
+    "walk_score":           st.column_config.NumberColumn("Walk Score (0–100)",     format="%.0f"),
+    "bike_score":           st.column_config.NumberColumn("Bike Score (0–100)",     format="%.0f"),
+    "grocery_count":        st.column_config.NumberColumn("Groceries (¾ mi)",       format="%d"),
+    "cafe_count":           st.column_config.NumberColumn("Cafés (¾ mi)",           format="%d"),
+    "restaurant_count":     st.column_config.NumberColumn("Restaurants (¾ mi)",     format="%d"),
+    "pharmacy_count":       st.column_config.NumberColumn("Pharmacies (¾ mi)",      format="%d"),
+    "dist_nearest_park_km": st.column_config.NumberColumn("Nearest Park (km)",      format="%.1f"),
+    "parks_within_50km":    st.column_config.NumberColumn("Protected Areas (<50km)", format="%d"),
+    "median_home_value":    st.column_config.NumberColumn("Median Home Value",      format="$%,.0f"),
+    "fmr_2br_rent":         st.column_config.NumberColumn("2-Bed Rent/Month",       format="$%,.0f"),
+    "airport_drive_min":    st.column_config.NumberColumn("Drive to Airport (min)", format="%.0f"),
 }
 
 
@@ -471,6 +522,8 @@ def show_region(df_raw: pd.DataFrame, region: str) -> None:
         return
 
     df_display = _rename_for_display(scored, region)
+    with st.spinner("Looking up city names…"):
+        df_display = _enrich_with_city(df_display)
 
     # Map
     map_html = _render_map_html(df_display, region)
@@ -504,6 +557,9 @@ with tab_combined:
     )
     north_display = _rename_for_display(north_scored, "north")
     south_display = _rename_for_display(south_scored, "south")
+    with st.spinner("Looking up city names…"):
+        north_display = _enrich_with_city(north_display)
+        south_display = _enrich_with_city(south_display)
     if north_display.empty and south_display.empty:
         st.warning("No candidates survive the current filters — try loosening the sliders.")
     else:
