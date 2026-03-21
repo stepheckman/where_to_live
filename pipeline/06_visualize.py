@@ -95,7 +95,7 @@ def build_popup(row: pd.Series, region: str) -> str:
         )
     elif region == "south" and "fmr_2br_rent" in row.index:
         affordability_row = (
-            f"<tr><td><b>FMR 2BR rent</b></td>"
+            f"<tr><td><b>2-bed rent/month</b></td>"
             f"<td>{format_currency(row.get('fmr_2br_rent'))}/mo</td></tr>"
         )
 
@@ -111,8 +111,11 @@ def build_popup(row: pd.Series, region: str) -> str:
 
     geoid = row.get("geoid", "")
 
+    park_dist = row.get("dist_nearest_park_km")
+    park_dist_str = "N/A" if pd.isna(park_dist) else f"{park_dist:.1f} km away"
+
     return f"""
-    <div style="font-family: sans-serif; width: 280px;">
+    <div style="font-family: sans-serif; width: 300px;">
       <h4 style="margin:0 0 2px 0;">BG {geoid}</h4>
       {city_line}
       <table style="border-collapse: collapse; width: 100%;">
@@ -121,15 +124,16 @@ def build_popup(row: pd.Series, region: str) -> str:
             Score: {row['composite_score']:.1f} / 100
           </td>
         </tr>
-        <tr><td><b>Walk Score</b></td><td>{walk}</td></tr>
-        <tr><td><b>Bike Score</b></td><td>{bike}</td></tr>
-        <tr><td><b>Groceries (1200m)</b></td><td>{int(row.get('grocery_count', 0))}</td></tr>
-        <tr><td><b>Cafés (1200m)</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
-        <tr><td><b>Restaurants (1200m)</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
-        <tr><td><b>Pharmacies (1200m)</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
+        <tr><td><b>Walk Score (0–100)</b></td><td>{walk}</td></tr>
+        <tr><td><b>Bike Score (0–100)</b></td><td>{bike}</td></tr>
+        <tr><td><b>Grocery stores (¾ mi)</b></td><td>{int(row.get('grocery_count', 0))}</td></tr>
+        <tr><td><b>Cafés (¾ mi)</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
+        <tr><td><b>Restaurants (¾ mi)</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
+        <tr><td><b>Pharmacies (¾ mi)</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
         <tr><td><b>Transit stops (1 mi)</b></td><td>{int(row.get('transit_stops', 0)) if pd.notna(row.get('transit_stops')) else 'N/A'}</td></tr>
         {affordability_row}
-        <tr><td><b>Nearest airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
+        <tr><td><b>Nearest park</b></td><td>{park_dist_str}</td></tr>
+        <tr><td><b>Drive to airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>
       <div style="margin-top:8px;">
         <a href="{gmaps_url}" target="_blank"
