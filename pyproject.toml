@@ -20,7 +20,9 @@ dependencies = [
     "streamlit>=1.55.0",
     "loguru>=0.7.3",
     "fiona>=1.10.1",
-    "osmium>=4.0",  # offline PBF parsing (replaces Overpass API calls)
+    "osmium>=4.0", # offline PBF parsing (replaces Overpass API calls)
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [tool.uv]
