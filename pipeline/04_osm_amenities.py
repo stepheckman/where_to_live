@@ -40,6 +40,7 @@ from config import (
     DATA_RAW,
     DATA_PROCESSED,
     POI_RADIUS_METERS,
+    TRANSIT_RADIUS_METERS,
     MIN_GROCERY_COUNT,
     MIN_PHARMACY_COUNT,
     OSM_SLEEP_S,
@@ -114,6 +115,157 @@ class _POIHandler(osmium.SimpleHandler):
             self.pois.append((centroid.x, centroid.y, cat))
         except Exception:
             pass
+
+
+class _TransitHandler(osmium.SimpleHandler):
+    """Extract public transit stops from a PBF file."""
+
+    # OSM tags that identify transit stop nodes
+    _BUS_STOP = {"bus_stop"}
+    _RAIL_STOP = {"station", "subway_entrance", "tram_stop", "halt", "stop"}
+
+    def __init__(self):
+        super().__init__()
+        self.stops: list[tuple[float, float]] = []
+
+    def _is_transit(self, tags) -> bool:
+        if tags.get("highway") in self._BUS_STOP:
+            return True
+        if tags.get("railway") in self._RAIL_STOP:
+            return True
+        if tags.get("public_transport") in ("stop_position", "platform"):
+            return True
+        return False
+
+    def node(self, n):
+        if self._is_transit(n.tags) and n.location.valid():
+            self.stops.append((n.location.lon, n.location.lat))
+
+
+def _extract_transit_from_pbf(pbf_path: Path) -> pd.DataFrame:
+    """Extract transit stops from a PBF file. Returns [lon, lat]."""
+    handler = _TransitHandler()
+    handler.apply_file(str(pbf_path), locations=True, idx="flex_mem")
+
+    if not handler.stops:
+        return pd.DataFrame(columns=["lon", "lat"])
+
+    return pd.DataFrame(handler.stops, columns=["lon", "lat"])
+
+
+def _get_state_transit(state_fips: str, pbf_path: Path) -> pd.DataFrame:
+    """Get transit stops for a state, using per-state cache if available."""
+    cache_dir = PBF_DIR / "transit_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / f"{state_fips}_transit.parquet"
+
+    if cache_path.exists():
+        return pd.read_parquet(cache_path)
+
+    logger.info(f"Parsing transit stops from {pbf_path.name} …")
+    stops = _extract_transit_from_pbf(pbf_path)
+    stops.to_parquet(cache_path, index=False)
+    logger.debug(f"  State {state_fips}: {len(stops):,} transit stops cached")
+    return stops
+
+
+def _count_transit_spatial(
+    candidates: pd.DataFrame,
+    state_fips_list: list[str],
+    pbf_paths: dict[str, Path],
+) -> pd.DataFrame:
+    """
+    Count transit stops within TRANSIT_RADIUS_METERS of each candidate.
+    Returns [geoid, transit_stops].
+    """
+    stop_frames = []
+    for fips in state_fips_list:
+        if fips in pbf_paths:
+            stop_frames.append(_get_state_transit(fips, pbf_paths[fips]))
+
+    if not stop_frames:
+        return pd.DataFrame({"geoid": candidates["GEOID"], "transit_stops": 0})
+
+    all_stops = pd.concat(stop_frames, ignore_index=True)
+    logger.info(f"Total transit stops across {len(state_fips_list)} states: {len(all_stops):,}")
+
+    candidate_gdf = gpd.GeoDataFrame(
+        candidates[["GEOID"]].copy(),
+        geometry=gpd.points_from_xy(
+            candidates["centroid_lon"], candidates["centroid_lat"]
+        ),
+        crs="EPSG:4326",
+    )
+    stop_gdf = gpd.GeoDataFrame(
+        all_stops,
+        geometry=gpd.points_from_xy(all_stops["lon"], all_stops["lat"]),
+        crs="EPSG:4326",
+    )
+
+    crs_proj = "EPSG:5070"
+    candidate_gdf = candidate_gdf.to_crs(crs_proj)
+    stop_gdf = stop_gdf.to_crs(crs_proj)
+
+    candidate_gdf["geometry"] = candidate_gdf.geometry.buffer(TRANSIT_RADIUS_METERS)
+
+    logger.info("Spatial join: counting transit stops per candidate …")
+    joined = gpd.sjoin(candidate_gdf, stop_gdf, how="left", predicate="contains")
+
+    counts = (
+        joined.groupby("GEOID")["index_right"]
+        .count()
+        .reset_index(name="transit_stops")
+    )
+
+    result = candidates[["GEOID"]].merge(counts, on="GEOID", how="left").fillna(0)
+    result = result.rename(columns={"GEOID": "geoid"})
+    result["transit_stops"] = result["transit_stops"].astype(int)
+    return result
+
+
+def fetch_transit_for_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Fetch and cache transit stop counts for all candidates."""
+    cache = DATA_RAW / f"{region}_transit_cache.parquet"
+
+    if cache.exists():
+        cached = pd.read_parquet(cache)
+        done_ids = set(cached["geoid"].astype(str))
+    else:
+        cached = pd.DataFrame()
+        done_ids = set()
+
+    todo = df[~df["GEOID"].astype(str).isin(done_ids)]
+    logger.debug(f"{region} transit: {len(done_ids)} cached, {len(todo)} remaining")
+
+    if todo.empty:
+        return cached
+
+    state_fips_list = sorted(todo["GEOID"].astype(str).str[:2].unique())
+
+    pbf_paths: dict[str, Path] = {}
+    for fips in state_fips_list:
+        local_path = PBF_DIR / f"{FIPS_TO_GEOFABRIK.get(fips, '')}-latest.osm.pbf"
+        if local_path.exists():
+            pbf_paths[fips] = local_path
+        else:
+            try:
+                pbf_paths[fips] = _download_state_pbf(fips)
+            except Exception as e:
+                logger.warning(f"PBF not available for state {fips}: {e}")
+
+    if not pbf_paths:
+        logger.warning("No PBF files available for transit — returning zero counts")
+        new_counts = pd.DataFrame({
+            "geoid": todo["GEOID"].astype(str),
+            "transit_stops": 0,
+        })
+    else:
+        new_counts = _count_transit_spatial(todo, state_fips_list, pbf_paths)
+
+    combined = pd.concat([cached, new_counts], ignore_index=True) if not cached.empty else new_counts
+    DATA_RAW.mkdir(parents=True, exist_ok=True)
+    combined.to_parquet(cache, index=False)
+    return combined
 
 
 def _download_state_pbf(state_fips: str) -> Path:
@@ -668,6 +820,14 @@ def run() -> None:
         ]
         logger.info(f"Amenity hard filter: {pre:,} → {len(df):,} block groups")
 
+        # Transit stops
+        transit_scores = fetch_transit_for_region(df, region)
+        df = df.merge(
+            transit_scores[["geoid", "transit_stops"]],
+            left_on="GEOID", right_on="geoid", how="left"
+        ).drop(columns=["geoid"], errors="ignore")
+        df["transit_stops"] = df["transit_stops"].fillna(0).astype(int)
+
     # Affordability signals
     # Determine which state FIPS codes are needed from north candidates
     north_ws = pd.read_parquet(DATA_PROCESSED / "north_walkscored.parquet")
@@ -706,6 +866,16 @@ def run() -> None:
                 (df["grocery_count"] >= MIN_GROCERY_COUNT) &
                 (df["pharmacy_count"] >= MIN_PHARMACY_COUNT)
             ]
+
+        # Re-apply transit merge (in case we restarted)
+        transit_cache = DATA_RAW / f"{region}_transit_cache.parquet"
+        if transit_cache.exists():
+            transit_scores = pd.read_parquet(transit_cache)
+            df = df.merge(
+                transit_scores[["geoid", "transit_stops"]],
+                left_on="GEOID", right_on="geoid", how="left"
+            ).drop(columns=["geoid"], errors="ignore")
+            df["transit_stops"] = df["transit_stops"].fillna(0).astype(int)
 
         # Hiking scores
         if not hiking.empty:

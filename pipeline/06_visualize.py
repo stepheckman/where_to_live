@@ -127,6 +127,7 @@ def build_popup(row: pd.Series, region: str) -> str:
         <tr><td><b>Cafés (1200m)</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
         <tr><td><b>Restaurants (1200m)</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
         <tr><td><b>Pharmacies (1200m)</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
+        <tr><td><b>Transit stops (1 mi)</b></td><td>{int(row.get('transit_stops', 0)) if pd.notna(row.get('transit_stops')) else 'N/A'}</td></tr>
         {affordability_row}
         <tr><td><b>Nearest airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>

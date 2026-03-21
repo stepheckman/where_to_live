@@ -45,6 +45,7 @@ MIN_BIKE_SCORE = 50
 # OSM amenity search
 # ---------------------------------------------------------------------------
 POI_RADIUS_METERS = 1200   # ~15-min walk
+TRANSIT_RADIUS_METERS = 1609  # ~1 mile
 
 # Hard minimums (block group eliminated if not met)
 MIN_GROCERY_COUNT = 1
@@ -55,6 +56,7 @@ CAP_GROCERY = 5
 CAP_CAFE = 10
 CAP_RESTAURANT = 30
 CAP_PHARMACY = 3
+CAP_TRANSIT = 20
 
 # ---------------------------------------------------------------------------
 # Hiking / protected areas (PAD-US)
@@ -74,12 +76,13 @@ HIKING_GAP_STATUS = {"1", "2", "3"}
 W_WALK = 0.30
 W_BIKE = 0.15
 W_GROCERY = 0.20
-W_CAFE = 0.05       # reduced from 0.10 to make room for hiking
-W_RESTAURANT = 0.05  # reduced from 0.10 to make room for hiking
+W_CAFE = 0.025      # reduced to make room for transit
+W_RESTAURANT = 0.025  # reduced to make room for transit
 W_PHARMACY = 0.05
+W_TRANSIT = 0.05     # public transit stops within 1 mile
 W_HIKING = 0.10      # PAD-US protected area proximity
 
-# Region-specific affordability signals (remaining 0.10)
+# Region-specific affordability signals (remaining 0.10 after base+hiking)
 # North: home value (Zillow ZHVI) — lower is better
 W_HOME_VALUE = 0.10
 # South: rent affordability (HUD FMR 2BR) — lower is better

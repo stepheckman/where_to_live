@@ -28,9 +28,9 @@ from config import (
     DATA_PROCESSED,
     OUTPUTS,
     TOP_N,
-    W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY, W_HIKING,
+    W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY, W_TRANSIT, W_HIKING,
     W_HOME_VALUE, W_RENT,
-    CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY,
+    CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY, CAP_TRANSIT,
     MIN_WALK_SCORE, MIN_BIKE_SCORE,
 )
 
@@ -73,6 +73,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
     df["n_cafe"]       = normalize_col(df.get("cafe_count"), cap=CAP_CAFE)
     df["n_restaurant"] = normalize_col(df.get("restaurant_count"), cap=CAP_RESTAURANT)
     df["n_pharmacy"]   = normalize_col(df.get("pharmacy_count"), cap=CAP_PHARMACY)
+    df["n_transit"]    = normalize_col(df.get("transit_stops"), cap=CAP_TRANSIT)
 
     # Hiking: combine distance (inverted) and count signals equally
     has_hiking = (
@@ -98,17 +99,20 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         df["n_affordability"] = np.nan
         affordability_weight = 0.0
 
+    has_transit = "transit_stops" in df.columns and df["transit_stops"].notna().any()
+
     # If Walk Score is missing, redistribute its weight to OSM signals
     if not has_walkscore:
         w_walk = 0.0
         w_bike = 0.0
         # Redistribute walk+bike weight proportionally to OSM signals
-        total_osm_base = W_GROCERY + W_CAFE + W_RESTAURANT + W_PHARMACY
+        total_osm_base = W_GROCERY + W_CAFE + W_RESTAURANT + W_PHARMACY + W_TRANSIT
         scale = (W_WALK + W_BIKE + total_osm_base) / total_osm_base
         w_grocery    = W_GROCERY    * scale
         w_cafe       = W_CAFE       * scale
         w_restaurant = W_RESTAURANT * scale
         w_pharmacy   = W_PHARMACY   * scale
+        w_transit    = W_TRANSIT    * scale
     else:
         w_walk       = W_WALK
         w_bike       = W_BIKE
@@ -116,6 +120,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         w_cafe       = W_CAFE
         w_restaurant = W_RESTAURANT
         w_pharmacy   = W_PHARMACY
+        w_transit    = W_TRANSIT if has_transit else 0.0
 
     # Scale down base weights to make room for hiking and affordability
     fixed_weight = hiking_weight + affordability_weight
@@ -127,6 +132,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         w_cafe       *= scale_factor
         w_restaurant *= scale_factor
         w_pharmacy   *= scale_factor
+        w_transit    *= scale_factor
     if not has_hiking:
         hiking_weight = 0.0
     if not (affordability_weight > 0 and df["n_affordability"].notna().any()):
@@ -143,6 +149,7 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         w_cafe           * safe_fill(df["n_cafe"])           +
         w_restaurant     * safe_fill(df["n_restaurant"])     +
         w_pharmacy       * safe_fill(df["n_pharmacy"])       +
+        w_transit        * safe_fill(df["n_transit"])        +
         hiking_weight    * safe_fill(df["n_hiking"])         +
         affordability_weight * safe_fill(df["n_affordability"])
     ) * 100  # scale to 0–100
@@ -163,6 +170,7 @@ def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "cafe_count": "cafe_count",
         "restaurant_count": "restaurant_count",
         "pharmacy_count": "pharmacy_count",
+        "transit_stops": "transit_stops",
         "dist_nearest_park_km": "dist_nearest_park_km",
         "parks_within_50km": "parks_within_50km",
         "nearest_airport": "nearest_airport",

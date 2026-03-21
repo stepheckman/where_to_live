@@ -26,6 +26,7 @@ from config import (
     CAP_GROCERY,
     CAP_PHARMACY,
     CAP_RESTAURANT,
+    CAP_TRANSIT,
     DATA_PROCESSED,
     MAX_AIRPORT_DRIVE_MIN,
     MIN_BIKE_SCORE,
@@ -40,6 +41,7 @@ from config import (
     W_HOME_VALUE,
     W_PHARMACY,
     W_RESTAURANT,
+    W_TRANSIT,
     W_WALK,
 )
 
@@ -121,6 +123,7 @@ with st.sidebar:
     w_cafe = st.slider("Cafés", 0.0, 1.0, W_CAFE, 0.05)
     w_restaurant = st.slider("Restaurants", 0.0, 1.0, W_RESTAURANT, 0.05)
     w_pharmacy = st.slider("Pharmacies", 0.0, 1.0, W_PHARMACY, 0.05)
+    w_transit = st.slider("Transit access", 0.0, 1.0, W_TRANSIT, 0.05)
     w_hiking = st.slider("Hiking access", 0.0, 1.0, W_HIKING, 0.05)
     w_afford = st.slider("Affordability", 0.0, 1.0, W_HOME_VALUE, 0.05)
 
@@ -131,6 +134,7 @@ with st.sidebar:
         cafe=w_cafe,
         restaurant=w_restaurant,
         pharmacy=w_pharmacy,
+        transit=w_transit,
         hiking=w_hiking,
         afford=w_afford,
     )
@@ -144,6 +148,7 @@ with st.sidebar:
         "cafe": "Café",
         "restaurant": "Rest",
         "pharmacy": "Rx",
+        "transit": "Bus/Rail",
         "hiking": "Hike",
         "afford": "$$",
     }
@@ -221,6 +226,7 @@ def score_and_filter(
     df["n_cafe"] = _normalize(df["cafe_count"], cap=CAP_CAFE)
     df["n_restaurant"] = _normalize(df["restaurant_count"], cap=CAP_RESTAURANT)
     df["n_pharmacy"] = _normalize(df["pharmacy_count"], cap=CAP_PHARMACY)
+    df["n_transit"] = _normalize(col_or_nan("transit_stops"), cap=CAP_TRANSIT)
 
     # Hiking: combine distance (inverted) and count signals equally
     has_hiking = "dist_nearest_park_km" in df.columns and df["dist_nearest_park_km"].notna().any()
@@ -244,6 +250,8 @@ def score_and_filter(
         w["afford"] = 0.0
     if df["n_hiking"].isna().all():
         w["hiking"] = 0.0
+    if df["n_transit"].isna().all():
+        w["transit"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -257,6 +265,7 @@ def score_and_filter(
         + w["cafe"] * safe(df["n_cafe"])
         + w["restaurant"] * safe(df["n_restaurant"])
         + w["pharmacy"] * safe(df["n_pharmacy"])
+        + w["transit"] * safe(df["n_transit"])
         + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
     ) * 100
@@ -331,6 +340,7 @@ def _build_popup(row: pd.Series, region: str) -> str:
         <tr><td><b>Café</b></td><td>{int(row.get('cafe_count', 0))}</td></tr>
         <tr><td><b>Restaurant</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
         <tr><td><b>Pharmacy</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
+        <tr><td><b>Transit (1mi)</b></td><td>{int(row.get('transit_stops', 0)) if pd.notna(row.get('transit_stops')) else 'N/A'}</td></tr>
         {afford_row}
         <tr><td><b>Park dist</b></td><td>{'N/A' if pd.isna(row.get('dist_nearest_park_km')) else f"{row['dist_nearest_park_km']:.1f} km"}</td></tr>
         <tr><td><b>Parks &lt;50km</b></td><td>{int(row.get('parks_within_50km', 0)) if pd.notna(row.get('parks_within_50km')) else 'N/A'}</td></tr>
@@ -426,13 +436,13 @@ DISPLAY_COLS = {
     "north": [
         "geoid", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
-        "dist_nearest_park_km", "parks_within_50km",
+        "transit_stops", "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "nearest_airport", "airport_drive_min",
     ],
     "south": [
         "geoid", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
-        "dist_nearest_park_km", "parks_within_50km",
+        "transit_stops", "dist_nearest_park_km", "parks_within_50km",
         "fmr_2br_rent", "nearest_airport", "airport_drive_min",
     ],
 }
@@ -445,6 +455,7 @@ COLUMN_CONFIG = {
     "cafe_count":           st.column_config.NumberColumn("Café",           format="%d"),
     "restaurant_count":     st.column_config.NumberColumn("Restaurant",     format="%d"),
     "pharmacy_count":       st.column_config.NumberColumn("Pharmacy",       format="%d"),
+    "transit_stops":        st.column_config.NumberColumn("Transit (1mi)",  format="%d"),
     "dist_nearest_park_km": st.column_config.NumberColumn("Park dist (km)", format="%.1f"),
     "parks_within_50km":    st.column_config.NumberColumn("Parks <50km",    format="%d"),
     "median_home_value":    st.column_config.NumberColumn("Home Value",     format="$%,.0f"),
