@@ -37,6 +37,7 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
 from config import (
+    CAP_BARS,
     CAP_CAFE,
     CAP_GROCERY,
     CAP_PHARMACY,
@@ -48,6 +49,7 @@ from config import (
     MIN_PHARMACY_COUNT,
     MIN_WALK_SCORE,
     TOP_N,
+    W_BARS,
     W_BIKE,
     W_CAFE,
     W_GROCERY,
@@ -106,10 +108,12 @@ def _build_weights(
     w_pharmacy: float,
     w_hiking: float,
     w_afford: float,
+    w_bars: float,
 ) -> dict:
     raw = dict(
         walk=w_walk, bike=w_bike, grocery=w_grocery, cafe=w_cafe,
-        restaurant=w_restaurant, pharmacy=w_pharmacy, hiking=w_hiking, afford=w_afford,
+        restaurant=w_restaurant, pharmacy=w_pharmacy, hiking=w_hiking,
+        afford=w_afford, bars=w_bars,
     )
     total = sum(raw.values()) or 1.0
     return {k: v / total for k, v in raw.items()}
@@ -183,12 +187,20 @@ def _score_and_filter(
         else pd.Series(np.nan, index=df.index)
     )
 
+    # Bars: fixed inversion — 0 bars → 1.0, CAP_BARS+ bars → 0.0
+    if "bar_count" in df.columns:
+        df["n_bars"] = 1.0 - (df["bar_count"].clip(upper=CAP_BARS) / CAP_BARS)
+    else:
+        df["n_bars"] = pd.Series(np.nan, index=df.index)
+
     # Re-normalize weights where data is missing
     w = weights.copy()
     if df["n_afford"].isna().all():
         w["afford"] = 0.0
     if df["n_hiking"].isna().all():
         w["hiking"] = 0.0
+    if df["n_bars"].isna().all():
+        w["bars"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -204,6 +216,7 @@ def _score_and_filter(
         + w["pharmacy"] * safe(df["n_pharmacy"])
         + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
+        + w["bars"] * safe(df["n_bars"])
     ) * 100
 
     # Drop internal normalization columns
@@ -268,6 +281,7 @@ def get_candidates(
     w_pharmacy:   WeightQ = W_PHARMACY,
     w_hiking:     WeightQ = W_HIKING,
     w_afford:     WeightQ = W_HOME_VALUE,
+    w_bars:       WeightQ = W_BARS,
 ) -> JSONResponse:
     if region not in ("north", "south", "combined"):
         raise HTTPException(
@@ -276,7 +290,7 @@ def get_candidates(
         )
 
     weights = _build_weights(
-        w_walk, w_bike, w_grocery, w_cafe, w_restaurant, w_pharmacy, w_hiking, w_afford,
+        w_walk, w_bike, w_grocery, w_cafe, w_restaurant, w_pharmacy, w_hiking, w_afford, w_bars,
     )
     filter_kwargs = dict(
         weights=weights,

@@ -22,6 +22,7 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
 from config import (
+    CAP_BARS,
     CAP_CAFE,
     CAP_GROCERY,
     CAP_PHARMACY,
@@ -34,6 +35,7 @@ from config import (
     MIN_PHARMACY_COUNT,
     MIN_WALK_SCORE,
     TOP_N,
+    W_BARS,
     W_BIKE,
     W_CAFE,
     W_GROCERY,
@@ -130,6 +132,7 @@ with st.sidebar:
     w_transit = st.slider("Transit access", 0.0, 1.0, W_TRANSIT, 0.05)
     w_hiking = st.slider("Hiking access", 0.0, 1.0, W_HIKING, 0.05)
     w_afford = st.slider("Affordability", 0.0, 1.0, W_HOME_VALUE, 0.05)
+    w_bars = st.slider("Bars (fewer is better)", 0.0, 1.0, W_BARS, 0.05)
 
     raw_weights = dict(
         walk=w_walk,
@@ -141,6 +144,7 @@ with st.sidebar:
         transit=w_transit,
         hiking=w_hiking,
         afford=w_afford,
+        bars=w_bars,
     )
     total_w = sum(raw_weights.values()) or 1.0
     norm_weights = {k: v / total_w for k, v in raw_weights.items()}
@@ -155,6 +159,7 @@ with st.sidebar:
         "transit": "Bus/Rail",
         "hiking": "Hike",
         "afford": "$$",
+        "bars": "NoBars",
     }
     st.caption(
         "Normalized: "
@@ -247,6 +252,12 @@ def score_and_filter(
         else pd.Series(np.nan, index=df.index)
     )
 
+    # Bars: fixed inversion — 0 bars → 1.0, CAP_BARS+ bars → 0.0
+    if "bar_count" in df.columns:
+        df["n_bars"] = 1.0 - (df["bar_count"].clip(upper=CAP_BARS) / CAP_BARS)
+    else:
+        df["n_bars"] = pd.Series(np.nan, index=df.index)
+
     # Re-normalize weights (zero out signals where data is missing)
     w = weights.copy()
     if df["n_afford"].isna().all():
@@ -255,6 +266,8 @@ def score_and_filter(
         w["hiking"] = 0.0
     if df["n_transit"].isna().all():
         w["transit"] = 0.0
+    if df["n_bars"].isna().all():
+        w["bars"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -271,6 +284,7 @@ def score_and_filter(
         + w["transit"] * safe(df["n_transit"])
         + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
+        + w["bars"] * safe(df["n_bars"])
     ) * 100
 
     df = df.sort_values("composite_score", ascending=False).head(top_n)
@@ -348,6 +362,7 @@ def _build_popup(row: pd.Series, region: str) -> str:
         <tr><td><b>Restaurants (¾ mi)</b></td><td>{int(row.get('restaurant_count', 0))}</td></tr>
         <tr><td><b>Pharmacies (¾ mi)</b></td><td>{int(row.get('pharmacy_count', 0))}</td></tr>
         <tr><td><b>Transit stops (1 mi)</b></td><td>{int(row.get('transit_stops', 0)) if pd.notna(row.get('transit_stops')) else 'N/A'}</td></tr>
+        <tr><td><b>Bars/pubs (¾ mi)</b></td><td>{int(row.get('bar_count', 0))}</td></tr>
         {afford_row}
         <tr><td><b>Nearest park</b></td><td>{park_dist_str}</td></tr>
         <tr><td><b>Protected areas (&lt;50 km)</b></td><td>{parks_nearby_str}</td></tr>
@@ -446,13 +461,13 @@ DISPLAY_COLS = {
     "north": [
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
-        "transit_stops", "dist_nearest_park_km", "parks_within_50km",
+        "transit_stops", "bar_count", "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
     ],
     "south": [
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
-        "transit_stops", "dist_nearest_park_km", "parks_within_50km",
+        "transit_stops", "bar_count", "dist_nearest_park_km", "parks_within_50km",
         "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
     ],
 }
@@ -467,6 +482,7 @@ COLUMN_CONFIG = {
     "restaurant_count":     st.column_config.NumberColumn("Restaurants (¾ mi)",      format="%d"),
     "pharmacy_count":       st.column_config.NumberColumn("Pharmacies (¾ mi)",       format="%d"),
     "transit_stops":        st.column_config.NumberColumn("Transit Stops (1 mi)",    format="%d"),
+    "bar_count":            st.column_config.NumberColumn("Bars/Pubs (¾ mi)",        format="%d"),
     "dist_nearest_park_km": st.column_config.NumberColumn("Nearest Park (km)",       format="%.1f"),
     "parks_within_50km":    st.column_config.NumberColumn("Protected Areas (<50 km)", format="%d"),
     "median_home_value":    st.column_config.NumberColumn("Median Home Value",       format="$%,.0f"),

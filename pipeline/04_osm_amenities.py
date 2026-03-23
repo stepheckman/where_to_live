@@ -49,6 +49,7 @@ from config import (
     PBF_DIR,
     GEOFABRIK_BASE_URL,
     FIPS_TO_GEOFABRIK,
+    CAP_BARS,
 )
 
 _wkbfab = osmium.geom.WKBFactory()
@@ -193,6 +194,31 @@ class _TransitHandler(osmium.SimpleHandler):
             self.stops.append((n.location.lon, n.location.lat))
 
 
+class _BarHandler(osmium.SimpleHandler):
+    """Extract bars, pubs, and nightclubs from a PBF file."""
+
+    _BAR_TYPES = {"bar", "pub", "nightclub"}
+
+    def __init__(self):
+        super().__init__()
+        self.bars: list[tuple[float, float]] = []
+
+    def node(self, n):
+        if n.tags.get("amenity") in self._BAR_TYPES and n.location.valid():
+            self.bars.append((n.location.lon, n.location.lat))
+
+    def area(self, a):
+        if a.tags.get("amenity") not in self._BAR_TYPES:
+            return
+        try:
+            wkb = _wkbfab.create_multipolygon(a)
+            poly = wkblib.loads(wkb, hex=True)
+            centroid = poly.representative_point()
+            self.bars.append((centroid.x, centroid.y))
+        except Exception:
+            pass
+
+
 def _extract_transit_from_pbf(pbf_path: Path) -> pd.DataFrame:
     """Extract transit stops from a PBF file. Returns [lon, lat]."""
     handler = _TransitHandler()
@@ -312,6 +338,132 @@ def fetch_transit_for_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
         })
     else:
         new_counts = _count_transit_spatial(todo, state_fips_list, pbf_paths)
+
+    combined = pd.concat([cached, new_counts], ignore_index=True) if not cached.empty else new_counts
+    DATA_RAW.mkdir(parents=True, exist_ok=True)
+    combined.to_parquet(cache, index=False)
+    return combined
+
+
+def _extract_bars_from_pbf(pbf_path: Path) -> pd.DataFrame:
+    """Extract bar/pub/nightclub nodes from a PBF file. Returns [lon, lat]."""
+    handler = _BarHandler()
+    handler.apply_file(str(pbf_path), locations=True, idx="flex_mem")
+
+    if not handler.bars:
+        return pd.DataFrame(columns=["lon", "lat"])
+
+    return pd.DataFrame(handler.bars, columns=["lon", "lat"])
+
+
+def _get_state_bars(state_fips: str, pbf_path: Path) -> pd.DataFrame:
+    """Get bar/pub/nightclub locations for a state, using per-state cache if available."""
+    cache_dir = PBF_DIR / "bar_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / f"{state_fips}_bars.parquet"
+
+    if cache_path.exists():
+        return pd.read_parquet(cache_path)
+
+    logger.info(f"Parsing bars/pubs/nightclubs from {pbf_path.name} …")
+    bars = _extract_bars_from_pbf(pbf_path)
+    bars.to_parquet(cache_path, index=False)
+    logger.debug(f"  State {state_fips}: {len(bars):,} bar locations cached")
+    return bars
+
+
+def _count_bars_spatial(
+    candidates: pd.DataFrame,
+    state_fips_list: list[str],
+    pbf_paths: dict[str, Path],
+) -> pd.DataFrame:
+    """
+    Count bars/pubs/nightclubs within POI_RADIUS_METERS of each candidate.
+    Returns [geoid, bar_count].
+    """
+    bar_frames = []
+    for fips in state_fips_list:
+        if fips in pbf_paths:
+            bar_frames.append(_get_state_bars(fips, pbf_paths[fips]))
+
+    if not bar_frames:
+        return pd.DataFrame({"geoid": candidates["GEOID"].astype(str), "bar_count": 0})
+
+    all_bars = pd.concat(bar_frames, ignore_index=True)
+    logger.info(f"Total bar/pub/nightclub locations across {len(state_fips_list)} states: {len(all_bars):,}")
+
+    candidate_gdf = gpd.GeoDataFrame(
+        candidates[["GEOID"]].copy(),
+        geometry=gpd.points_from_xy(
+            candidates["centroid_lon"], candidates["centroid_lat"]
+        ),
+        crs="EPSG:4326",
+    )
+    bar_gdf = gpd.GeoDataFrame(
+        all_bars,
+        geometry=gpd.points_from_xy(all_bars["lon"], all_bars["lat"]),
+        crs="EPSG:4326",
+    )
+
+    crs_proj = "EPSG:5070"
+    candidate_gdf = candidate_gdf.to_crs(crs_proj)
+    bar_gdf = bar_gdf.to_crs(crs_proj)
+
+    candidate_gdf["geometry"] = candidate_gdf.geometry.buffer(POI_RADIUS_METERS)
+
+    logger.info("Spatial join: counting bars per candidate …")
+    joined = gpd.sjoin(candidate_gdf, bar_gdf, how="left", predicate="contains")
+
+    counts = (
+        joined.groupby("GEOID")["index_right"]
+        .count()
+        .reset_index(name="bar_count")
+    )
+
+    result = candidates[["GEOID"]].merge(counts, on="GEOID", how="left").fillna(0)
+    result = result.rename(columns={"GEOID": "geoid"})
+    result["bar_count"] = result["bar_count"].astype(int)
+    return result
+
+
+def fetch_bars_for_region(df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Fetch and cache bar/pub/nightclub counts for all candidates."""
+    cache = DATA_RAW / f"{region}_bar_cache.parquet"
+
+    if cache.exists():
+        cached = pd.read_parquet(cache)
+        done_ids = set(cached["geoid"].astype(str))
+    else:
+        cached = pd.DataFrame()
+        done_ids = set()
+
+    todo = df[~df["GEOID"].astype(str).isin(done_ids)]
+    logger.debug(f"{region} bars: {len(done_ids)} cached, {len(todo)} remaining")
+
+    if todo.empty:
+        return cached
+
+    state_fips_list = sorted(todo["GEOID"].astype(str).str[:2].unique())
+
+    pbf_paths: dict[str, Path] = {}
+    for fips in state_fips_list:
+        local_path = PBF_DIR / f"{FIPS_TO_GEOFABRIK.get(fips, '')}-latest.osm.pbf"
+        if local_path.exists():
+            pbf_paths[fips] = local_path
+        else:
+            try:
+                pbf_paths[fips] = _download_state_pbf(fips)
+            except Exception as e:
+                logger.warning(f"PBF not available for state {fips}: {e}")
+
+    if not pbf_paths:
+        logger.warning("No PBF files available for bars — returning zero counts")
+        new_counts = pd.DataFrame({
+            "geoid": todo["GEOID"].astype(str),
+            "bar_count": 0,
+        })
+    else:
+        new_counts = _count_bars_spatial(todo, state_fips_list, pbf_paths)
 
     combined = pd.concat([cached, new_counts], ignore_index=True) if not cached.empty else new_counts
     DATA_RAW.mkdir(parents=True, exist_ok=True)
@@ -1052,6 +1204,14 @@ def run() -> None:
         ).drop(columns=["geoid"], errors="ignore")
         df["transit_stops"] = df["transit_stops"].fillna(0).astype(int)
 
+        # Bar/pub/nightclub counts (inverted signal — more bars = worse)
+        bar_scores = fetch_bars_for_region(df, region)
+        df = df.merge(
+            bar_scores[["geoid", "bar_count"]],
+            left_on="GEOID", right_on="geoid", how="left"
+        ).drop(columns=["geoid"], errors="ignore")
+        df["bar_count"] = df["bar_count"].fillna(0).astype(int)
+
     # Affordability signals (Zillow ZHVI median home value — used for both regions)
     # Collect state FIPS codes from both north and south candidates
     north_ws = pd.read_parquet(DATA_PROCESSED / "north_walkscored.parquet")
@@ -1103,6 +1263,16 @@ def run() -> None:
                 left_on="GEOID", right_on="geoid", how="left"
             ).drop(columns=["geoid"], errors="ignore")
             df["transit_stops"] = df["transit_stops"].fillna(0).astype(int)
+
+        # Re-apply bar merge (in case we restarted)
+        bar_cache = DATA_RAW / f"{region}_bar_cache.parquet"
+        if bar_cache.exists():
+            bar_scores = pd.read_parquet(bar_cache)
+            df = df.merge(
+                bar_scores[["geoid", "bar_count"]],
+                left_on="GEOID", right_on="geoid", how="left"
+            ).drop(columns=["geoid"], errors="ignore")
+            df["bar_count"] = df["bar_count"].fillna(0).astype(int)
 
         # Hiking scores
         if not hiking.empty:
