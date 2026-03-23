@@ -28,6 +28,7 @@ from config import (
     CAP_PHARMACY,
     CAP_RESTAURANT,
     CAP_TRANSIT,
+    CAP_PM25,
     DATA_PROCESSED,
     MAX_AIRPORT_DRIVE_MIN,
     MIN_BIKE_SCORE,
@@ -40,6 +41,7 @@ from config import (
     W_GROCERY,
     W_HIKING,
     W_HOME_VALUE,
+    W_AIR_QUALITY,
     W_PHARMACY,
     W_RESTAURANT,
     W_TRANSIT,
@@ -165,6 +167,7 @@ with st.sidebar:
     w_transit = st.slider("Transit access", 0.0, 1.0, W_TRANSIT, 0.05)
     w_hiking = st.slider("Hiking access", 0.0, 1.0, W_HIKING, 0.05)
     w_afford = st.slider("Affordability", 0.0, 1.0, W_HOME_VALUE, 0.05)
+    w_air = st.slider("Air quality", 0.0, 1.0, W_AIR_QUALITY, 0.05)
 
     raw_weights = dict(
         walk=w_walk,
@@ -176,6 +179,7 @@ with st.sidebar:
         transit=w_transit,
         hiking=w_hiking,
         afford=w_afford,
+        air=w_air,
     )
     total_w = sum(raw_weights.values()) or 1.0
     norm_weights = {k: v / total_w for k, v in raw_weights.items()}
@@ -190,6 +194,7 @@ with st.sidebar:
         "transit": "Bus/Rail",
         "hiking": "Hike",
         "afford": "$$",
+        "air": "Air",
     }
     st.caption(
         "Normalized: "
@@ -282,6 +287,13 @@ def score_and_filter(
         else pd.Series(np.nan, index=df.index)
     )
 
+    # Air quality: n_air = 1 - min(pm25 / CAP_PM25, 1.0)
+    df["n_air"] = (
+        (1.0 - (df["pm25"] / CAP_PM25).clip(upper=1.0))
+        if "pm25" in df.columns
+        else pd.Series(np.nan, index=df.index)
+    )
+
     # Re-normalize weights (zero out signals where data is missing)
     w = weights.copy()
     if df["n_afford"].isna().all():
@@ -290,6 +302,8 @@ def score_and_filter(
         w["hiking"] = 0.0
     if df["n_transit"].isna().all():
         w["transit"] = 0.0
+    if df["n_air"].isna().all():
+        w["air"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -306,6 +320,7 @@ def score_and_filter(
         + w["transit"] * safe(df["n_transit"])
         + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
+        + w["air"] * safe(df["n_air"])
     ) * 100
 
     df = df.sort_values("composite_score", ascending=False).head(top_n)
@@ -386,6 +401,7 @@ def _build_popup(row: pd.Series, region: str) -> str:
         {afford_row}
         <tr><td><b>Nearest park</b></td><td>{park_dist_str}</td></tr>
         <tr><td><b>Protected areas (&lt;50 km)</b></td><td>{parks_nearby_str}</td></tr>
+        <tr><td><b>Air quality (PM2.5)</b></td><td>{'N/A' if pd.isna(row.get('pm25')) else f"{row['pm25']:.1f} µg/m³"}</td></tr>
         <tr><td><b>Drive to airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>
       <div style="margin-top:8px;">
@@ -482,13 +498,13 @@ DISPLAY_COLS = {
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "transit_stops", "dist_nearest_park_km", "parks_within_50km",
-        "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
+        "median_home_value", "home_value_source", "pm25", "nearest_airport", "airport_drive_min",
     ],
     "south": [
         "geoid", "city", "composite_score", "walk_score", "bike_score",
         "grocery_count", "cafe_count", "restaurant_count", "pharmacy_count",
         "transit_stops", "dist_nearest_park_km", "parks_within_50km",
-        "median_home_value", "home_value_source", "nearest_airport", "airport_drive_min",
+        "median_home_value", "home_value_source", "pm25", "nearest_airport", "airport_drive_min",
     ],
 }
 
@@ -506,6 +522,7 @@ COLUMN_CONFIG = {
     "parks_within_50km":    st.column_config.NumberColumn("Protected Areas (<50 km)", format="%d"),
     "median_home_value":    st.column_config.NumberColumn("Median Home Value",       format="$%,.0f"),
     "home_value_source":    st.column_config.TextColumn("Home Value Source"),
+    "pm25":                 st.column_config.NumberColumn("PM2.5 (µg/m³)",           format="%.1f"),
     "airport_drive_min":    st.column_config.NumberColumn("Drive to Airport (min)",  format="%.0f"),
 }
 

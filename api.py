@@ -41,6 +41,7 @@ from config import (
     CAP_GROCERY,
     CAP_PHARMACY,
     CAP_RESTAURANT,
+    CAP_PM25,
     DATA_PROCESSED,
     MAX_AIRPORT_DRIVE_MIN,
     MIN_BIKE_SCORE,
@@ -53,6 +54,7 @@ from config import (
     W_GROCERY,
     W_HIKING,
     W_HOME_VALUE,
+    W_AIR_QUALITY,
     W_PHARMACY,
     W_RESTAURANT,
     W_WALK,
@@ -106,10 +108,12 @@ def _build_weights(
     w_pharmacy: float,
     w_hiking: float,
     w_afford: float,
+    w_air: float,
 ) -> dict:
     raw = dict(
         walk=w_walk, bike=w_bike, grocery=w_grocery, cafe=w_cafe,
         restaurant=w_restaurant, pharmacy=w_pharmacy, hiking=w_hiking, afford=w_afford,
+        air=w_air,
     )
     total = sum(raw.values()) or 1.0
     return {k: v / total for k, v in raw.items()}
@@ -183,12 +187,21 @@ def _score_and_filter(
         else pd.Series(np.nan, index=df.index)
     )
 
+    # Air quality: n_air = 1 - min(pm25 / CAP_PM25, 1.0)
+    df["n_air"] = (
+        (1.0 - (df["pm25"] / CAP_PM25).clip(upper=1.0))
+        if "pm25" in df.columns
+        else pd.Series(np.nan, index=df.index)
+    )
+
     # Re-normalize weights where data is missing
     w = weights.copy()
     if df["n_afford"].isna().all():
         w["afford"] = 0.0
     if df["n_hiking"].isna().all():
         w["hiking"] = 0.0
+    if df["n_air"].isna().all():
+        w["air"] = 0.0
     total = sum(w.values()) or 1.0
     w = {k: v / total for k, v in w.items()}
 
@@ -204,6 +217,7 @@ def _score_and_filter(
         + w["pharmacy"] * safe(df["n_pharmacy"])
         + w["hiking"] * safe(df["n_hiking"])
         + w["afford"] * safe(df["n_afford"])
+        + w["air"] * safe(df["n_air"])
     ) * 100
 
     # Drop internal normalization columns
@@ -260,14 +274,15 @@ def get_candidates(
     min_pharmacies:  Annotated[int, Query(ge=0, description="Min pharmacies within 1200m")] = MIN_PHARMACY_COUNT,
     top_n:           Annotated[int, Query(ge=1, le=500, description="Number of results")] = TOP_N,
     # Score weights
-    w_walk:       WeightQ = W_WALK,
-    w_bike:       WeightQ = W_BIKE,
-    w_grocery:    WeightQ = W_GROCERY,
-    w_cafe:       WeightQ = W_CAFE,
-    w_restaurant: WeightQ = W_RESTAURANT,
-    w_pharmacy:   WeightQ = W_PHARMACY,
-    w_hiking:     WeightQ = W_HIKING,
-    w_afford:     WeightQ = W_HOME_VALUE,
+    w_walk:        WeightQ = W_WALK,
+    w_bike:        WeightQ = W_BIKE,
+    w_grocery:     WeightQ = W_GROCERY,
+    w_cafe:        WeightQ = W_CAFE,
+    w_restaurant:  WeightQ = W_RESTAURANT,
+    w_pharmacy:    WeightQ = W_PHARMACY,
+    w_hiking:      WeightQ = W_HIKING,
+    w_afford:      WeightQ = W_HOME_VALUE,
+    w_air_quality: WeightQ = W_AIR_QUALITY,
 ) -> JSONResponse:
     if region not in ("north", "south", "combined"):
         raise HTTPException(
@@ -276,7 +291,7 @@ def get_candidates(
         )
 
     weights = _build_weights(
-        w_walk, w_bike, w_grocery, w_cafe, w_restaurant, w_pharmacy, w_hiking, w_afford,
+        w_walk, w_bike, w_grocery, w_cafe, w_restaurant, w_pharmacy, w_hiking, w_afford, w_air_quality,
     )
     filter_kwargs = dict(
         weights=weights,

@@ -52,6 +52,12 @@ from config import (
     FIPS_TO_GEOFABRIK,
 )
 
+# EPA AQS annual concentration by monitor (PM2.5 - Local Conditions)
+# Used for county-level PM2.5 (µg/m³) as air quality signal
+AQS_ANNUAL_CONC_URL = (
+    "https://aqs.epa.gov/aqsweb/airdata/annual_conc_by_monitor_{year}.zip"
+)
+
 _wkbfab = osmium.geom.WKBFactory()
 
 # OSM tags to query
@@ -975,6 +981,86 @@ def fetch_hiking_scores(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Air quality (EPA AQS PM2.5)
+# ---------------------------------------------------------------------------
+
+def fetch_air_quality() -> pd.DataFrame:
+    """
+    Download EPA AQS annual PM2.5 concentration by monitor, aggregate to county level.
+
+    Returns DataFrame with columns:
+      county_fips : str   5-digit county FIPS (e.g. '06037')
+      pm25        : float annual average PM2.5 (µg/m³)
+
+    The cache file is data/raw/air_quality.parquet.
+    """
+    cache_path = DATA_RAW / "air_quality.parquet"
+    if cache_path.exists():
+        logger.info(f"Loading cached air quality data from {cache_path}")
+        return pd.read_parquet(cache_path)
+
+    DATA_RAW.mkdir(parents=True, exist_ok=True)
+
+    # Try recent years in descending order
+    df_raw = None
+    for year in (2023, 2022, 2021):
+        url = AQS_ANNUAL_CONC_URL.format(year=year)
+        logger.info(f"Downloading EPA AQS PM2.5 data ({year}) from {url} …")
+        try:
+            import io as _io
+            resp = requests.get(url, timeout=180)
+            resp.raise_for_status()
+            with zipfile.ZipFile(_io.BytesIO(resp.content)) as zf:
+                # Find the CSV file (skip directory entries)
+                csv_names = [n for n in zf.namelist() if n.endswith(".csv")]
+                if not csv_names:
+                    raise ValueError("No CSV found in AQS zip")
+                with zf.open(csv_names[0]) as f:
+                    df_raw = pd.read_csv(f, dtype=str)
+            logger.success(f"Downloaded AQS {year}: {len(df_raw):,} rows")
+            break
+        except Exception as exc:
+            logger.warning(f"AQS {year} download failed: {exc}")
+
+    if df_raw is None:
+        logger.error("All AQS PM2.5 downloads failed — air quality signal will be skipped.")
+        return pd.DataFrame(columns=["county_fips", "pm25"])
+
+    # Filter to PM2.5 Local Conditions, 24-hour block avg daily mean
+    mask = (
+        (df_raw["Parameter Name"] == "PM2.5 - Local Conditions") &
+        (df_raw["Sample Duration"] == "24-HR BLK AVG") &
+        (df_raw["Metric Used"] == "Daily Mean")
+    )
+    pm25 = df_raw[mask].copy()
+    logger.info(f"PM2.5 rows after filter: {len(pm25):,}")
+
+    if pm25.empty:
+        logger.error("No PM2.5 rows found after filtering.")
+        return pd.DataFrame(columns=["county_fips", "pm25"])
+
+    pm25["county_fips"] = (
+        pm25["State Code"].str.zfill(2) + pm25["County Code"].str.zfill(3)
+    )
+    pm25["pm25_val"] = pd.to_numeric(pm25["Arithmetic Mean"], errors="coerce")
+
+    county_pm25 = (
+        pm25.groupby("county_fips")["pm25_val"]
+        .mean()
+        .reset_index()
+        .rename(columns={"pm25_val": "pm25"})
+    )
+    county_pm25 = county_pm25.dropna(subset=["pm25"])
+
+    county_pm25.to_parquet(cache_path, index=False)
+    logger.success(
+        f"Air quality cached: {len(county_pm25):,} counties, "
+        f"PM2.5 range {county_pm25['pm25'].min():.1f}–{county_pm25['pm25'].max():.1f} µg/m³"
+    )
+    return county_pm25
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1023,6 +1109,13 @@ def run() -> None:
     ))
 
     home_values = fetch_acs_home_value(all_states)
+
+    # Air quality (EPA AQS PM2.5 — county level)
+    try:
+        air_quality = fetch_air_quality()
+    except Exception as exc:
+        logger.warning(f"Could not fetch air quality data ({exc}) — skipping.")
+        air_quality = pd.DataFrame(columns=["county_fips", "pm25"])
 
     # Hiking scores — computed once across all candidates combined
     all_candidates = pd.concat([
@@ -1084,6 +1177,17 @@ def run() -> None:
                 f"{n_bg:,}/{len(df):,} block groups"
             )
             df = fill_missing_home_values(df, all_states)
+
+        # Air quality: join county-level PM2.5 via first 5 digits of GEOID
+        if not air_quality.empty:
+            df["_county_fips"] = df["GEOID"].astype(str).str[:5]
+            df = df.merge(air_quality, left_on="_county_fips", right_on="county_fips", how="left")
+            df = df.drop(columns=["_county_fips", "county_fips"], errors="ignore")
+            n_aq = int(df["pm25"].notna().sum())
+            logger.info(
+                f"{region.capitalize()}: PM2.5 joined for {n_aq:,}/{len(df):,} block groups "
+                f"(mean {df['pm25'].mean():.1f} µg/m³)"
+            )
 
         out_path = DATA_PROCESSED / f"{region}_amenities.parquet"
         df.to_parquet(out_path, index=False)

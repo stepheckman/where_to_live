@@ -28,8 +28,8 @@ from config import (
     OUTPUTS,
     TOP_N,
     W_WALK, W_BIKE, W_GROCERY, W_CAFE, W_RESTAURANT, W_PHARMACY, W_TRANSIT, W_HIKING,
-    W_HOME_VALUE,
-    CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY, CAP_TRANSIT,
+    W_HOME_VALUE, W_AIR_QUALITY,
+    CAP_GROCERY, CAP_CAFE, CAP_RESTAURANT, CAP_PHARMACY, CAP_TRANSIT, CAP_PM25,
     MIN_WALK_SCORE, MIN_BIKE_SCORE,
 )
 
@@ -95,6 +95,14 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         df["n_affordability"] = np.nan
         affordability_weight = 0.0
 
+    # Air quality: n_air = 1 - min(pm25 / CAP_PM25, 1.0); lower pollution → higher score
+    if "pm25" in df.columns and df["pm25"].notna().any():
+        df["n_air_quality"] = (1.0 - (df["pm25"] / CAP_PM25).clip(upper=1.0))
+        air_quality_weight = W_AIR_QUALITY
+    else:
+        df["n_air_quality"] = np.nan
+        air_quality_weight = 0.0
+
     has_transit = "transit_stops" in df.columns and df["transit_stops"].notna().any()
 
     # If Walk Score is missing, redistribute its weight to OSM signals
@@ -118,8 +126,8 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         w_pharmacy   = W_PHARMACY
         w_transit    = W_TRANSIT if has_transit else 0.0
 
-    # Scale down base weights to make room for hiking and affordability
-    fixed_weight = hiking_weight + affordability_weight
+    # Scale down base weights to make room for hiking, affordability, and air quality
+    fixed_weight = hiking_weight + affordability_weight + air_quality_weight
     if fixed_weight > 0:
         scale_factor = 1.0 - fixed_weight
         w_walk       *= scale_factor
@@ -133,21 +141,24 @@ def compute_scores(df: pd.DataFrame, region: str) -> pd.DataFrame:
         hiking_weight = 0.0
     if not (affordability_weight > 0 and df["n_affordability"].notna().any()):
         affordability_weight = 0.0
+    if not (air_quality_weight > 0 and df["n_air_quality"].notna().any()):
+        air_quality_weight = 0.0
 
     def safe_fill(col: pd.Series, default: float = 0.5) -> pd.Series:
         """Fill NaN with a neutral value for scoring (doesn't penalize missing)."""
         return col.fillna(default)
 
     df["composite_score"] = (
-        w_walk           * safe_fill(df["n_walk"])           +
-        w_bike           * safe_fill(df["n_bike"])           +
-        w_grocery        * safe_fill(df["n_grocery"])        +
-        w_cafe           * safe_fill(df["n_cafe"])           +
-        w_restaurant     * safe_fill(df["n_restaurant"])     +
-        w_pharmacy       * safe_fill(df["n_pharmacy"])       +
-        w_transit        * safe_fill(df["n_transit"])        +
-        hiking_weight    * safe_fill(df["n_hiking"])         +
-        affordability_weight * safe_fill(df["n_affordability"])
+        w_walk               * safe_fill(df["n_walk"])           +
+        w_bike               * safe_fill(df["n_bike"])           +
+        w_grocery            * safe_fill(df["n_grocery"])        +
+        w_cafe               * safe_fill(df["n_cafe"])           +
+        w_restaurant         * safe_fill(df["n_restaurant"])     +
+        w_pharmacy           * safe_fill(df["n_pharmacy"])       +
+        w_transit            * safe_fill(df["n_transit"])        +
+        hiking_weight        * safe_fill(df["n_hiking"])         +
+        affordability_weight * safe_fill(df["n_affordability"])  +
+        air_quality_weight   * safe_fill(df["n_air_quality"])
     ) * 100  # scale to 0–100
 
     return df
@@ -174,6 +185,7 @@ def build_output_row(df: pd.DataFrame, region: str) -> pd.DataFrame:
         "composite_score": "composite_score",
     }
     cols["median_home_value"] = "median_home_value"
+    cols["pm25"] = "pm25"
 
     present = {k: v for k, v in cols.items() if k in df.columns}
     out = df.rename(columns=present)[[v for v in present.values()]]

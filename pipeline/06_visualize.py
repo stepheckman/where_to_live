@@ -130,6 +130,7 @@ def build_popup(row: pd.Series, region: str) -> str:
         <tr><td><b>Transit stops (1 mi)</b></td><td>{int(row.get('transit_stops', 0)) if pd.notna(row.get('transit_stops')) else 'N/A'}</td></tr>
         {affordability_row}
         <tr><td><b>Nearest park</b></td><td>{park_dist_str}</td></tr>
+        <tr><td><b>Air quality (PM2.5)</b></td><td>{'N/A' if pd.isna(row.get('pm25')) else f"{row['pm25']:.1f} µg/m³"}</td></tr>
         <tr><td><b>Drive to airport</b></td><td style="font-size:11px;">{airport_str}</td></tr>
       </table>
       <div style="margin-top:8px;">

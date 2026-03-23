@@ -87,6 +87,14 @@ W_HIKING = 0.10      # PAD-US protected area proximity
 W_HOME_VALUE = 0.10
 
 # ---------------------------------------------------------------------------
+# Air quality (EPA AQS PM2.5 annual mean — county level)
+# ---------------------------------------------------------------------------
+# WHO annual guideline is 5 µg/m³; US NAAQS standard is 12 µg/m³.
+# Cap at 15 µg/m³ so anything above that scores 0.
+CAP_PM25 = 15.0
+W_AIR_QUALITY = 0.05
+
+# ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
 TOP_N = 25   # candidates per region in final ranked output
