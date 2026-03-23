@@ -5,8 +5,7 @@ Counts key POI types within walking/biking distance of each candidate
 centroid using the Overpass API (via osmnx). Results are cached.
 
 Also pulls affordability data:
-  - North (buy): Census ACS median home value (B25077) by block group
-  - South (rent): Zillow ZHVI median home value by block group (same as north)
+  - Census ACS median home value (B25077) by block group (both regions)
 
 And hiking access data:
   - PAD-US (USGS Protected Areas Database): distance to nearest qualifying
@@ -53,6 +52,46 @@ from config import (
 )
 
 _wkbfab = osmium.geom.WKBFactory()
+
+
+# ---------------------------------------------------------------------------
+# Reverse geocoding for city names (baked into parquet so the app loads fast)
+# ---------------------------------------------------------------------------
+def _reverse_geocode_city(lat: float, lon: float) -> str:
+    """Return 'City, State' for a lat/lon via OSM Nominatim (free, no key)."""
+    try:
+        resp = requests.get(
+            "https://nominatim.openstreetmap.org/reverse",
+            params={"lat": lat, "lon": lon, "format": "json"},
+            headers={"User-Agent": "where-to-live-pipeline/1.0"},
+            timeout=10,
+        )
+        addr = resp.json().get("address", {})
+        city = (
+            addr.get("city") or addr.get("town")
+            or addr.get("village") or addr.get("county", "")
+        )
+        state = addr.get("state", "")
+        return f"{city}, {state}".strip(", ")
+    except Exception:
+        return ""
+
+
+def _add_city_column(df: pd.DataFrame) -> pd.DataFrame:
+    """Add a 'city' column via reverse geocoding if not already present."""
+    if "city" in df.columns:
+        return df
+    logger.info("Reverse geocoding city names …")
+    lat_col = "centroid_lat" if "centroid_lat" in df.columns else "lat"
+    lon_col = "centroid_lon" if "centroid_lon" in df.columns else "lon"
+    cities = []
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Geocoding"):
+        cities.append(_reverse_geocode_city(row[lat_col], row[lon_col]))
+        time.sleep(1.1)  # Nominatim rate limit: 1 req/s
+    df = df.copy()
+    df["city"] = cities
+    return df
+
 
 # OSM tags to query
 POI_TAGS = {
@@ -1084,6 +1123,9 @@ def run() -> None:
                 f"{n_bg:,}/{len(df):,} block groups"
             )
             df = fill_missing_home_values(df, all_states)
+
+        # Reverse geocode city names so the app doesn't need to at startup
+        df = _add_city_column(df)
 
         out_path = DATA_PROCESSED / f"{region}_amenities.parquet"
         df.to_parquet(out_path, index=False)

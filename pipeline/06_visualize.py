@@ -219,7 +219,7 @@ def run() -> None:
         tiles="CartoDB positron",
     )
 
-    north_group = folium.FeatureGroup(name="North candidates (buy)", show=True)
+    north_group = folium.FeatureGroup(name="North candidates", show=True)
     south_group = folium.FeatureGroup(name="South candidates", show=True)
 
     for _, row in north_df.iterrows():

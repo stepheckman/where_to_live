@@ -78,7 +78,7 @@ W_BIKE = 0.15
 W_GROCERY = 0.20
 W_CAFE = 0.025      # reduced to make room for transit
 W_RESTAURANT = 0.025  # reduced to make room for transit
-W_PHARMACY = 0.05
+W_PHARMACY = 0.00   # hard filter only — user just needs ≥1
 W_TRANSIT = 0.05     # public transit stops within 1 mile
 W_HIKING = 0.10      # PAD-US protected area proximity
 

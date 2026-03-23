@@ -15,7 +15,6 @@ from pathlib import Path
 import folium
 import numpy as np
 import pandas as pd
-import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -62,42 +61,8 @@ st.caption(
     "Data comes from the cached pipeline outputs (steps 1–4)."
 )
 
-# ---------------------------------------------------------------------------
-# Reverse geocoding (cached per location so it only runs once per lat/lon)
-# ---------------------------------------------------------------------------
-def _reverse_geocode_city(lat: float, lon: float) -> str:
-    """Return 'City, State' for a lat/lon via OSM Nominatim (free, no key)."""
-    try:
-        resp = requests.get(
-            "https://nominatim.openstreetmap.org/reverse",
-            params={"lat": lat, "lon": lon, "format": "json"},
-            headers={"User-Agent": "where-to-live-app/1.0"},
-            timeout=10,
-        )
-        addr = resp.json().get("address", {})
-        city = (
-            addr.get("city") or addr.get("town")
-            or addr.get("village") or addr.get("county", "")
-        )
-        state = addr.get("state", "")
-        return f"{city}, {state}".strip(", ")
-    except Exception:
-        return ""
-
-
-@st.cache_data(show_spinner=False)
-def _geocode_one(lat: float, lon: float) -> str:
-    """Cached single-location reverse geocode."""
-    return _reverse_geocode_city(lat, lon)
-
-
-def _enrich_with_city(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a 'city' column to a display df (must have 'lat'/'lon' columns)."""
-    if "city" in df.columns:
-        return df
-    df = df.copy()
-    df["city"] = [_geocode_one(row["lat"], row["lon"]) for _, row in df.iterrows()]
-    return df
+# City names are now baked into the parquet files by step 4.
+# No live reverse geocoding needed at app startup.
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +408,7 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
     )
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
 
-    north_group = folium.FeatureGroup(name="North — buy", show=True)
+    north_group = folium.FeatureGroup(name="North", show=True)
     south_group = folium.FeatureGroup(name="South", show=True)
 
     for _, row in north_df.iterrows():
@@ -528,8 +493,7 @@ def show_region(df_raw: pd.DataFrame, region: str) -> None:
         return
 
     df_display = _rename_for_display(scored, region)
-    with st.spinner("Looking up city names…"):
-        df_display = _enrich_with_city(df_display)
+    # city names come from the cached parquet data
 
     # Map
     map_html = _render_map_html(df_display, region)
@@ -548,7 +512,7 @@ def show_region(df_raw: pd.DataFrame, region: str) -> None:
 # ---------------------------------------------------------------------------
 # Tabs
 # ---------------------------------------------------------------------------
-tab_combined, tab_north, tab_south = st.tabs(["Combined", "North — buy", "South — rent"])
+tab_combined, tab_north, tab_south = st.tabs(["Combined", "North", "South"])
 
 with tab_combined:
     north_scored, _ = score_and_filter(
@@ -563,14 +527,32 @@ with tab_combined:
     )
     north_display = _rename_for_display(north_scored, "north")
     south_display = _rename_for_display(south_scored, "south")
-    with st.spinner("Looking up city names…"):
-        north_display = _enrich_with_city(north_display)
-        south_display = _enrich_with_city(south_display)
+    # city names come from the cached parquet data
     if north_display.empty and south_display.empty:
         st.warning("No candidates survive the current filters — try loosening the sliders.")
     else:
         combined_html = _render_combined_map_html(north_display, south_display)
         components.html(combined_html, height=580, scrolling=False)
+
+        # Tables below the map
+        if not north_display.empty:
+            st.subheader("North")
+            n_cols = [c for c in DISPLAY_COLS["north"] if c in north_display.columns]
+            st.dataframe(
+                north_display[n_cols].reset_index(drop=True),
+                use_container_width=True,
+                column_config=COLUMN_CONFIG,
+                height=400,
+            )
+        if not south_display.empty:
+            st.subheader("South")
+            s_cols = [c for c in DISPLAY_COLS["south"] if c in south_display.columns]
+            st.dataframe(
+                south_display[s_cols].reset_index(drop=True),
+                use_container_width=True,
+                column_config=COLUMN_CONFIG,
+                height=400,
+            )
 
 with tab_north:
     show_region(north_raw, "north")
