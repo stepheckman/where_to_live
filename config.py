@@ -57,6 +57,7 @@ CAP_CAFE = 10
 CAP_RESTAURANT = 30
 CAP_PHARMACY = 3
 CAP_TRANSIT = 20
+CAP_BARS = 15         # 15+ bars/pubs/nightclubs within ¾ mi = worst score
 
 # ---------------------------------------------------------------------------
 # Hiking / protected areas (PAD-US)
@@ -71,10 +72,11 @@ HIKING_GAP_STATUS = {"1", "2", "3"}
 
 # ---------------------------------------------------------------------------
 # Composite score weights — must sum to 1.0
+# NOTE: weights are approximate starting points; adjust to taste.
 # ---------------------------------------------------------------------------
 # Base walkability signals
-W_WALK = 0.30
-W_BIKE = 0.15
+W_WALK = 0.28        # reduced by 0.02 to make room for bars signal
+W_BIKE = 0.13        # reduced by 0.02 to make room for bars signal
 W_GROCERY = 0.20
 W_CAFE = 0.025      # reduced to make room for transit
 W_RESTAURANT = 0.025  # reduced to make room for transit
@@ -84,7 +86,11 @@ W_HIKING = 0.10      # PAD-US protected area proximity
 
 # Affordability signal (Zillow ZHVI median home value) — lower is better
 # Used for both north and south regions
-W_HOME_VALUE = 0.10
+W_HOME_VALUE = 0.09  # reduced by 0.01 to make room for bars signal
+
+# Nightlife density — INVERTED: more bars/pubs/nightclubs = worse score
+# 0 bars → score 1.0; CAP_BARS+ bars → score 0.0
+W_BARS = 0.05
 
 # ---------------------------------------------------------------------------
 # Output
