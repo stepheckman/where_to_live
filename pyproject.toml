@@ -2,7 +2,7 @@
 name = "where-to-live"
 version = "0.1.0"
 description = "Find walkable neighborhoods for a two-location lifestyle after DC"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4"
 dependencies = [
     "geopandas>=1.0",
     "shapely>=2.0",
