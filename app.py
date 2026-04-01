@@ -61,7 +61,7 @@ st.set_page_config(
 
 st.title("Where to Live — Interactive Explorer")
 st.caption(
-    "Adjust filters and weights in the sidebar; the map and table update instantly."
+    "Adjust filters and weights in the sidebar; the map and table update instantly"
 )
 
 # City names are now baked into the parquet files by step 4.
