@@ -61,8 +61,7 @@ st.set_page_config(
 
 st.title("Where to Live — Interactive Explorer")
 st.caption(
-    "Adjust filters and weights in the sidebar; the map and table update instantly. "
-    "Data comes from the cached pipeline outputs (steps 1–4)."
+    "Adjust filters and weights in the sidebar; the map and table update instantly."
 )
 
 # City names are now baked into the parquet files by step 4.
@@ -409,8 +408,9 @@ def _render_map_html(df: pd.DataFrame, region: str) -> str:
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=6,
-        tiles="CartoDB positron",
+        tiles=None,
     )
+    folium.TileLayer("CartoDB positron", control=False).add_to(m)
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
     for _, row in df.iterrows():
         geoid = row.get("geoid", "")
@@ -435,8 +435,9 @@ def _render_combined_map_html(north_df: pd.DataFrame, south_df: pd.DataFrame) ->
     m = folium.Map(
         location=[sum(all_lats) / len(all_lats), sum(all_lons) / len(all_lons)],
         zoom_start=4,
-        tiles="CartoDB positron",
+        tiles=None,
     )
+    folium.TileLayer("CartoDB positron", control=False).add_to(m)
     m.get_root().html.add_child(folium.Element(_LEGEND_HTML))
 
     north_group = folium.FeatureGroup(name="North", show=True)
