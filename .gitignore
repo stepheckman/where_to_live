@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+.claude/
 
 # Downloaded / generated data — large files, reproducible
 data/raw/
