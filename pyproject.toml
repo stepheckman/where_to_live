@@ -20,7 +20,7 @@ dependencies = [
     "streamlit>=1.55.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
-    "fiona>=1.10.1",
+    "pyogrio>=0.7",  # GeoPackage layer listing (bundled with geopandas)
     "osmium>=4.0", # offline PBF parsing (replaces Overpass API calls)
 ]
 

@@ -23,7 +23,6 @@ import time
 import zipfile
 from pathlib import Path
 
-import fiona
 import geopandas as gpd
 import osmium
 import osmnx as ox
@@ -1086,8 +1085,10 @@ def _load_padus_filtered() -> gpd.GeoDataFrame:
     logger.info(f"Loading PAD-US from {gpkg_path} (this may take a few minutes)…")
 
     # Discover the Combined layer name (varies by version)
-    layers = fiona.listlayers(str(gpkg_path))
-    combined_layer = next((l for l in layers if "Combined" in l), layers[0])
+    import pyogrio
+    layer_info = pyogrio.list_layers(str(gpkg_path))
+    layer_names = [name for name, _ in layer_info]
+    combined_layer = next((l for l in layer_names if "Combined" in l), layer_names[0])
     logger.debug(f"Using PAD-US layer: {combined_layer}")
 
     gdf = gpd.read_file(
