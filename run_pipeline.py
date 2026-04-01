@@ -13,8 +13,10 @@ import sys
 import time
 from pathlib import Path
 
-from loguru import logger
+import logging
 from pipeline.log import setup as setup_logging
+
+logger = logging.getLogger(__name__)
 
 
 STEPS = [
@@ -42,7 +44,7 @@ def run_step(number: int, label: str, module_path: str) -> None:
     mod = importlib.import_module(module_path)
     mod.run()
     elapsed = time.time() - t0
-    logger.success(f"Step {number} complete in {elapsed:.1f}s")
+    logger.info(f"Step {number} complete in {elapsed:.1f}s")
 
 
 def main() -> None:
@@ -73,7 +75,7 @@ def main() -> None:
         run_step(number, label, module)
 
     total = time.time() - total_start
-    logger.success(f"Pipeline complete in {total/60:.1f} minutes.")
+    logger.info(f"Pipeline complete in {total/60:.1f} minutes.")
     logger.info("Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/")
 
 

@@ -21,7 +21,9 @@ from folium.plugins import MarkerCluster
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import OUTPUTS, MAPS
 
 
@@ -202,7 +204,7 @@ def run() -> None:
         m = make_map(df, region, center_lat, center_lon)
         out_path = MAPS / f"{region}_candidates.html"
         m.save(str(out_path))
-        logger.success(f"Saved {out_path}")
+        logger.info(f"Saved {out_path}")
 
     # Combined map (both regions)
     logger.info("Building combined map…")
@@ -254,7 +256,7 @@ def run() -> None:
 
     combined_path = MAPS / "combined_candidates.html"
     m_combined.save(str(combined_path))
-    logger.success(f"Saved combined map: {combined_path}")
+    logger.info(f"Saved combined map: {combined_path}")
 
 
 if __name__ == "__main__":

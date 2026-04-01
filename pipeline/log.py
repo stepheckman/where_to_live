@@ -1,48 +1,52 @@
 """
-Shared loguru configuration for the where-to-live pipeline.
+Shared logging configuration for the where-to-live pipeline.
 
-Pipeline files just do `from loguru import logger` and use it directly.
+Pipeline files use `from pipeline.log import logger` or just
+`import logging; logger = logging.getLogger(__name__)`.
+
 The sinks (console + optional log file) are configured once by calling setup()
 from the entry point (run_pipeline.py or standalone scripts).
 """
 
+import logging
 import sys
 from pathlib import Path
 
-from loguru import logger
+logger = logging.getLogger("pipeline")
 
 
 def setup(log_file: Path | str | None = None, level: str = "DEBUG") -> None:
     """
-    Configure loguru sinks. Call once at startup.
+    Configure logging handlers. Call once at startup.
 
     Args:
         log_file: path to write persistent log file (optional)
         level: minimum log level to capture
     """
-    logger.remove()  # drop loguru's default stderr handler
+    root = logging.getLogger("pipeline")
+    root.setLevel(getattr(logging, level.upper(), logging.DEBUG))
 
-    # Console — colored, concise, human-readable
-    logger.add(
-        sys.stderr,
-        format=(
-            "<green>{time:HH:mm:ss}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan> | "
-            "{message}"
-        ),
-        colorize=True,
-        level=level,
-    )
+    # Console — concise, human-readable
+    console = logging.StreamHandler(sys.stderr)
+    console.setLevel(getattr(logging, level.upper(), logging.DEBUG))
+    console.setFormatter(logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%H:%M:%S",
+    ))
+    root.addHandler(console)
 
     if log_file:
         Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-        logger.add(
+        from logging.handlers import RotatingFileHandler
+        fh = RotatingFileHandler(
             str(log_file),
-            rotation="10 MB",
-            retention="30 days",
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} | {message}",
-            level=level,
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5,
             encoding="utf-8",
         )
-        logger.debug(f"Logging to {log_file}")
+        fh.setLevel(getattr(logging, level.upper(), logging.DEBUG))
+        fh.setFormatter(logging.Formatter(
+            "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
+        ))
+        root.addHandler(fh)
+        root.debug("Logging to %s", log_file)

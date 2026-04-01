@@ -34,7 +34,9 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -504,7 +506,7 @@ def _download_state_pbf(state_fips: str) -> Path:
             downloaded += len(chunk)
 
     size_mb = local_path.stat().st_size / 1e6
-    logger.success(f"Downloaded {local_path.name} ({size_mb:.0f} MB)")
+    logger.info(f"Downloaded {local_path.name} ({size_mb:.0f} MB)")
     return local_path
 
 
@@ -1167,7 +1169,7 @@ def fetch_hiking_scores(df: pd.DataFrame) -> pd.DataFrame:
     result = result.rename(columns={"GEOID": "geoid"})
 
     result.to_parquet(cache, index=False)
-    logger.success(f"Hiking scores cached for {len(result):,} block groups")
+    logger.info(f"Hiking scores cached for {len(result):,} block groups")
     return result
 
 
@@ -1208,7 +1210,7 @@ def fetch_air_quality() -> pd.DataFrame:
                     raise ValueError("No CSV found in AQS zip")
                 with zf.open(csv_names[0]) as f:
                     df_raw = pd.read_csv(f, dtype=str)
-            logger.success(f"Downloaded AQS {year}: {len(df_raw):,} rows")
+            logger.info(f"Downloaded AQS {year}: {len(df_raw):,} rows")
             break
         except Exception as exc:
             logger.warning(f"AQS {year} download failed: {exc}")
@@ -1244,7 +1246,7 @@ def fetch_air_quality() -> pd.DataFrame:
     county_pm25 = county_pm25.dropna(subset=["pm25"])
 
     county_pm25.to_parquet(cache_path, index=False)
-    logger.success(
+    logger.info(
         f"Air quality cached: {len(county_pm25):,} counties, "
         f"PM2.5 range {county_pm25['pm25'].min():.1f}–{county_pm25['pm25'].max():.1f} µg/m³"
     )
@@ -1403,7 +1405,7 @@ def run() -> None:
 
         out_path = DATA_PROCESSED / f"{region}_amenities.parquet"
         df.to_parquet(out_path, index=False)
-        logger.success(f"Saved {out_path}")
+        logger.info(f"Saved {out_path}")
 
 
 if __name__ == "__main__":

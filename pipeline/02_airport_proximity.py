@@ -26,7 +26,9 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -235,7 +237,7 @@ def run() -> None:
     south_out = DATA_PROCESSED / "south_airport_filtered.geojson"
     north_filtered.to_file(north_out, driver="GeoJSON")
     south_filtered.to_file(south_out, driver="GeoJSON")
-    logger.success(f"Saved: {north_out}  |  {south_out}")
+    logger.info(f"Saved: {north_out}  |  {south_out}")
 
 
 if __name__ == "__main__":

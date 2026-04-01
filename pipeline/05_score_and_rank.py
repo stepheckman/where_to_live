@@ -22,7 +22,9 @@ import pandas as pd
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import (
     DATA_PROCESSED,
     OUTPUTS,
@@ -221,7 +223,7 @@ def run() -> None:
         out_path = OUTPUTS / f"{region}_candidates.csv"
         top.to_csv(out_path, index=False)
 
-        logger.success(f"Top {len(top)} {region} candidates saved to {out_path}")
+        logger.info(f"Top {len(top)} {region} candidates saved to {out_path}")
         logger.debug("\n" + top[["geoid", "composite_score"] +
               (["walk_score"] if "walk_score" in top.columns else []) +
               (["median_home_value"] if "median_home_value" in top.columns else [])

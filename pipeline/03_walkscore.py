@@ -28,7 +28,9 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import (
     DATA_PROCESSED,
     SCRAPE_SLEEP_S,
@@ -200,7 +202,7 @@ def run() -> None:
 
         out_path = DATA_PROCESSED / f"{region}_walkscored.parquet"
         merged.to_parquet(out_path, index=False)
-        logger.success(f"Saved {out_path} ({len(merged):,} candidates)")
+        logger.info(f"Saved {out_path} ({len(merged):,} candidates)")
 
 
 if __name__ == "__main__":

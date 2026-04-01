@@ -25,7 +25,9 @@ from tqdm import tqdm
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from loguru import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from config import (
     DATA_RAW,
     DATA_PROCESSED,
@@ -147,7 +149,7 @@ def download_bg_shapefiles(state_fips_list: list[str]) -> gpd.GeoDataFrame:
     combined = combined[[c for c in keep if c in combined.columns]]
 
     combined.to_parquet(cache)
-    logger.success(f"Cached {len(combined):,} block groups to {cache}")
+    logger.info(f"Cached {len(combined):,} block groups to {cache}")
     return combined
 
 
@@ -242,7 +244,7 @@ def run() -> None:
     south_out = DATA_PROCESSED / "south_candidates_geo.geojson"
     north.to_file(north_out, driver="GeoJSON")
     south.to_file(south_out, driver="GeoJSON")
-    logger.success(f"Saved: {north_out}  |  {south_out}")
+    logger.info(f"Saved: {north_out}  |  {south_out}")
 
 
 if __name__ == "__main__":
