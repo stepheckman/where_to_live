@@ -15,6 +15,8 @@ outputs/
 # Keep directory structure
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/processed/north_amenities.parquet
+!data/processed/south_amenities.parquet
 !outputs/maps/.gitkeep
 
 # uv
