@@ -1274,3 +1274,195 @@
 2026-03-15 22:50:35 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 137.5s
 2026-03-15 22:50:35 | SUCCESS  | __main__:main:76 | Pipeline complete in 3750.1 minutes.
 2026-03-15 22:50:35 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-21 06:52:13 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-21 06:52:13 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-21 06:52:13 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 06:52:13 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / HUD FMR)
+2026-03-21 06:52:13 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 06:52:14 | INFO     | pipeline.04_osm_amenities:run:999 | --- NORTH (53,342 candidates) ---
+2026-03-21 06:52:14 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:500 | north: 65916 cached, 0 remaining
+2026-03-21 06:52:14 | INFO     | pipeline.04_osm_amenities:run:1015 | Amenity hard filter: 53,342 → 15,686 block groups
+2026-03-21 06:52:14 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:256 | north transit: 15686 cached, 0 remaining
+2026-03-21 06:52:14 | INFO     | pipeline.04_osm_amenities:run:999 | --- SOUTH (31,267 candidates) ---
+2026-03-21 06:52:14 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:500 | south: 39252 cached, 0 remaining
+2026-03-21 06:52:14 | INFO     | pipeline.04_osm_amenities:run:1015 | Amenity hard filter: 31,267 → 4,969 block groups
+2026-03-21 06:52:14 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:256 | south transit: 4969 cached, 0 remaining
+2026-03-21 06:52:14 | INFO     | pipeline.04_osm_amenities:fetch_acs_home_value:548 | Fetching ACS median home value for block groups…
+2026-03-21 06:52:37 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_home_value:578 | Cached home values for 160,922 block groups
+2026-03-21 06:52:37 | DEBUG    | pipeline.04_osm_amenities:fetch_hud_fmr:769 | HUD FMR data already cached.
+2026-03-21 06:52:37 | INFO     | pipeline.04_osm_amenities:_download_padus:828 | Querying ScienceBase for PAD-US download URL…
+2026-03-21 06:53:08 | WARNING  | pipeline.04_osm_amenities:run:1043 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-21 06:53:09 | INFO     | pipeline.04_osm_amenities:run:1088 | North: Census ACS home value joined for 12,093/15,686 block groups
+2026-03-21 06:53:09 | INFO     | pipeline.04_osm_amenities:fetch_acs_tract_home_value:592 | Fetching ACS median home value for tracts…
+2026-03-21 06:53:28 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_tract_home_value:618 | Cached home values for 55,121 tracts
+2026-03-21 06:53:28 | INFO     | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:632 | Fetching ACS median home value for ZCTAs…
+2026-03-21 06:53:29 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:655 | Cached home values for 33,774 ZCTAs
+2026-03-21 06:53:29 | INFO     | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:670 | Downloading ZCTA→tract crosswalk…
+2026-03-21 06:53:32 | DEBUG    | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:697 | Cached ZCTA-tract crosswalk for 85,528 tracts
+2026-03-21 06:53:32 | INFO     | pipeline.04_osm_amenities:fill_missing_home_values:751 | Home value fallback: filled 2,658 from tract, 0 from ZCTA, 935 still missing
+2026-03-21 06:53:32 | SUCCESS  | pipeline.04_osm_amenities:run:1106 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-21 06:53:32 | INFO     | pipeline.04_osm_amenities:run:1099 | South: HUD FMR joined for 1,946/4,969 block groups
+2026-03-21 06:53:32 | SUCCESS  | pipeline.04_osm_amenities:run:1106 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-21 06:53:32 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 79.0s
+2026-03-21 06:53:32 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 06:53:32 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-21 06:53:32 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 06:53:32 | INFO     | pipeline.05_score_and_rank:run:199 | --- NORTH (15,686 candidates after all filters) ---
+2026-03-21 06:53:32 | SUCCESS  | pipeline.05_score_and_rank:run:207 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-21 06:53:32 | DEBUG    | pipeline.05_score_and_rank:run:208 | 
+       geoid  composite_score  walk_score  median_home_value
+360610008002        80.380000       100.0             9999.0
+421010007021        80.248790       100.0           197300.0
+360610008003        79.608571        99.0             9999.0
+360610008001        79.570000       100.0             9999.0
+360610008004        79.300000       100.0             9999.0
+360470445002        79.107143        98.0             9999.0
+421010004013        78.966507        99.0           191500.0
+360610097001        78.883168        98.0           108300.0
+360610093001        78.842465        98.0           116400.0
+360610097002        78.803772        98.0           124100.0
+2026-03-21 06:53:32 | INFO     | pipeline.05_score_and_rank:run:199 | --- SOUTH (4,969 candidates after all filters) ---
+2026-03-21 06:53:32 | SUCCESS  | pipeline.05_score_and_rank:run:207 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-21 06:53:32 | DEBUG    | pipeline.05_score_and_rank:run:208 | 
+       geoid  composite_score  walk_score  fmr_2br_rent
+220710038001        74.277651        95.0        1362.0
+060730053013        74.068571        99.0           NaN
+060372073032        73.335714        97.0           NaN
+060730052022        73.258571        99.0           NaN
+060730054012        73.258571        99.0           NaN
+220710026002        73.120508        97.0        1362.0
+060372073031        73.027143        98.0           NaN
+060730054011        72.988571        99.0           NaN
+060730053012        72.988571        99.0           NaN
+060372073041        72.757143        98.0           NaN
+2026-03-21 06:53:32 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-21 06:53:32 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 06:53:32 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-21 06:53:32 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 06:53:32 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 06:53:42 | INFO     | pipeline.06_visualize:run:200 | NORTH: 25 candidates
+2026-03-21 06:53:42 | SUCCESS  | pipeline.06_visualize:run:208 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-21 06:53:42 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 06:54:24 | INFO     | pipeline.06_visualize:run:200 | SOUTH: 25 candidates
+2026-03-21 06:54:24 | SUCCESS  | pipeline.06_visualize:run:208 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-21 06:54:24 | INFO     | pipeline.06_visualize:run:211 | Building combined map…
+2026-03-21 06:54:24 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 06:55:06 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 06:55:46 | SUCCESS  | pipeline.06_visualize:run:260 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-21 06:55:46 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 134.1s
+2026-03-21 06:55:46 | SUCCESS  | __main__:main:76 | Pipeline complete in 3.6 minutes.
+2026-03-21 06:55:46 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-21 07:37:19 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-21 07:37:19 | INFO     | __main__:main:69 | Running 3 pipeline step(s)…
+2026-03-21 07:37:19 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 07:37:19 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / Zillow ZHVI)
+2026-03-21 07:37:19 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 07:37:20 | INFO     | pipeline.04_osm_amenities:run:990 | --- NORTH (53,342 candidates) ---
+2026-03-21 07:37:20 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:494 | north: 65916 cached, 0 remaining
+2026-03-21 07:37:20 | INFO     | pipeline.04_osm_amenities:run:1006 | Amenity hard filter: 53,342 → 15,686 block groups
+2026-03-21 07:37:20 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:250 | north transit: 15686 cached, 0 remaining
+2026-03-21 07:37:20 | INFO     | pipeline.04_osm_amenities:run:990 | --- SOUTH (31,267 candidates) ---
+2026-03-21 07:37:20 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:494 | south: 39252 cached, 0 remaining
+2026-03-21 07:37:20 | INFO     | pipeline.04_osm_amenities:run:1006 | Amenity hard filter: 31,267 → 4,969 block groups
+2026-03-21 07:37:20 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:250 | south transit: 4969 cached, 0 remaining
+2026-03-21 07:37:20 | INFO     | pipeline.04_osm_amenities:fetch_acs_home_value:542 | Fetching ACS median home value for block groups…
+2026-03-21 07:37:51 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_home_value:572 | Cached home values for 238,194 block groups
+2026-03-21 07:37:51 | INFO     | pipeline.04_osm_amenities:_download_padus:819 | Querying ScienceBase for PAD-US download URL…
+2026-03-21 07:38:22 | WARNING  | pipeline.04_osm_amenities:run:1037 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-21 07:38:22 | INFO     | pipeline.04_osm_amenities:run:1082 | North: Census ACS home value joined for 12,093/15,686 block groups
+2026-03-21 07:38:22 | INFO     | pipeline.04_osm_amenities:fetch_acs_tract_home_value:586 | Fetching ACS median home value for tracts…
+2026-03-21 07:38:46 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_tract_home_value:612 | Cached home values for 83,777 tracts
+2026-03-21 07:38:46 | INFO     | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:626 | Fetching ACS median home value for ZCTAs…
+2026-03-21 07:38:47 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:649 | Cached home values for 33,774 ZCTAs
+2026-03-21 07:38:47 | INFO     | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:664 | Downloading ZCTA→tract crosswalk…
+2026-03-21 07:38:49 | DEBUG    | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:691 | Cached ZCTA-tract crosswalk for 85,528 tracts
+2026-03-21 07:38:49 | INFO     | pipeline.04_osm_amenities:fill_missing_home_values:745 | Home value fallback: filled 2,658 from tract, 0 from ZCTA, 935 still missing
+2026-03-21 07:38:49 | SUCCESS  | pipeline.04_osm_amenities:run:1090 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-21 07:38:49 | INFO     | pipeline.04_osm_amenities:run:1082 | South: Census ACS home value joined for 3,917/4,969 block groups
+2026-03-21 07:38:49 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_tract_home_value:583 | Census ACS tract home value data already cached.
+2026-03-21 07:38:49 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:623 | Census ACS ZCTA home value data already cached.
+2026-03-21 07:38:49 | DEBUG    | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:661 | ZCTA-tract crosswalk already cached.
+2026-03-21 07:38:49 | INFO     | pipeline.04_osm_amenities:fill_missing_home_values:745 | Home value fallback: filled 756 from tract, 0 from ZCTA, 296 still missing
+2026-03-21 07:38:49 | SUCCESS  | pipeline.04_osm_amenities:run:1090 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-21 07:38:49 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 89.5s
+2026-03-21 07:38:49 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 07:38:49 | INFO     | __main__:run_step:39 | STEP 5: Composite scoring and ranking
+2026-03-21 07:38:49 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 07:38:49 | INFO     | pipeline.05_score_and_rank:run:192 | --- NORTH (15,686 candidates after all filters) ---
+2026-03-21 07:38:49 | SUCCESS  | pipeline.05_score_and_rank:run:200 | Top 25 north candidates saved to /Users/steph/code/where_to_live/outputs/north_candidates.csv
+2026-03-21 07:38:49 | DEBUG    | pipeline.05_score_and_rank:run:201 | 
+       geoid  composite_score  walk_score  median_home_value
+360610008002        80.380000       100.0             9999.0
+421010007021        80.248790       100.0           197300.0
+360610008003        79.608571        99.0             9999.0
+360610008001        79.570000       100.0             9999.0
+360610008004        79.300000       100.0             9999.0
+360470445002        79.107143        98.0             9999.0
+421010004013        78.966507        99.0           191500.0
+360610097001        78.883168        98.0           108300.0
+360610093001        78.842465        98.0           116400.0
+360610097002        78.803772        98.0           124100.0
+2026-03-21 07:38:49 | INFO     | pipeline.05_score_and_rank:run:192 | --- SOUTH (4,969 candidates after all filters) ---
+2026-03-21 07:38:49 | SUCCESS  | pipeline.05_score_and_rank:run:200 | Top 25 south candidates saved to /Users/steph/code/where_to_live/outputs/south_candidates.csv
+2026-03-21 07:38:49 | DEBUG    | pipeline.05_score_and_rank:run:201 | 
+       geoid  composite_score  walk_score  median_home_value
+060730053013        76.920327        99.0           437500.0
+121030215021        76.580385        97.0           520500.0
+060730052022        75.864599        99.0           486400.0
+121030215022        75.808957        96.0           520500.0
+060730053012        75.393092        99.0           526500.0
+220710026002        74.794606        97.0           392300.0
+060372073032        74.751793        97.0           723200.0
+060730054012        74.709324        99.0           716300.0
+220710038001        74.679388        95.0           645500.0
+060730052023        74.530177        99.0           483300.0
+2026-03-21 07:38:49 | SUCCESS  | __main__:run_step:45 | Step 5 complete in 0.0s
+2026-03-21 07:38:49 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 07:38:49 | INFO     | __main__:run_step:39 | STEP 6: Interactive maps (folium HTML)
+2026-03-21 07:38:49 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 07:38:49 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 07:39:06 | INFO     | pipeline.06_visualize:run:195 | NORTH: 25 candidates
+2026-03-21 07:39:06 | SUCCESS  | pipeline.06_visualize:run:203 | Saved /Users/steph/code/where_to_live/outputs/maps/north_candidates.html
+2026-03-21 07:39:06 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 07:39:44 | INFO     | pipeline.06_visualize:run:195 | SOUTH: 25 candidates
+2026-03-21 07:39:44 | SUCCESS  | pipeline.06_visualize:run:203 | Saved /Users/steph/code/where_to_live/outputs/maps/south_candidates.html
+2026-03-21 07:39:44 | INFO     | pipeline.06_visualize:run:206 | Building combined map…
+2026-03-21 07:39:44 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 07:40:24 | INFO     | pipeline.06_visualize:add_city_column:55 | Reverse geocoding city names (this may take a moment)…
+2026-03-21 07:41:07 | SUCCESS  | pipeline.06_visualize:run:255 | Saved combined map: /Users/steph/code/where_to_live/outputs/maps/combined_candidates.html
+2026-03-21 07:41:07 | SUCCESS  | __main__:run_step:45 | Step 6 complete in 137.7s
+2026-03-21 07:41:07 | SUCCESS  | __main__:main:76 | Pipeline complete in 3.8 minutes.
+2026-03-21 07:41:07 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
+2026-03-21 09:06:03 | DEBUG    | pipeline.log:setup:48 | Logging to /Users/steph/code/where_to_live/pipeline.log
+2026-03-21 09:06:03 | INFO     | __main__:main:69 | Running 1 pipeline step(s)…
+2026-03-21 09:06:03 | INFO     | __main__:run_step:38 | ==================================================
+2026-03-21 09:06:03 | INFO     | __main__:run_step:39 | STEP 4: OSM amenities + affordability data (Census ACS / Zillow ZHVI)
+2026-03-21 09:06:03 | INFO     | __main__:run_step:40 | ==================================================
+2026-03-21 09:06:03 | INFO     | pipeline.04_osm_amenities:run:1029 | --- NORTH (53,342 candidates) ---
+2026-03-21 09:06:03 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:533 | north: 65916 cached, 0 remaining
+2026-03-21 09:06:03 | INFO     | pipeline.04_osm_amenities:run:1045 | Amenity hard filter: 53,342 → 15,686 block groups
+2026-03-21 09:06:03 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:289 | north transit: 15686 cached, 0 remaining
+2026-03-21 09:06:03 | INFO     | pipeline.04_osm_amenities:run:1029 | --- SOUTH (31,267 candidates) ---
+2026-03-21 09:06:03 | DEBUG    | pipeline.04_osm_amenities:fetch_amenities_for_region:533 | south: 39252 cached, 0 remaining
+2026-03-21 09:06:03 | INFO     | pipeline.04_osm_amenities:run:1045 | Amenity hard filter: 31,267 → 4,969 block groups
+2026-03-21 09:06:03 | DEBUG    | pipeline.04_osm_amenities:fetch_transit_for_region:289 | south transit: 4969 cached, 0 remaining
+2026-03-21 09:06:03 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_home_value:578 | Census ACS home value data already cached.
+2026-03-21 09:06:03 | INFO     | pipeline.04_osm_amenities:_download_padus:858 | Querying ScienceBase for PAD-US download URL…
+2026-03-21 09:06:34 | WARNING  | pipeline.04_osm_amenities:run:1076 | Could not compute hiking scores (404 Client Error: 404 for url: https://www.sciencebase.gov/catalog/item/652ee185d34e6bef37e0c4d0?format=json) — skipping hiking signal.
+2026-03-21 09:06:34 | INFO     | pipeline.04_osm_amenities:run:1121 | North: Census ACS home value joined for 12,093/15,686 block groups
+2026-03-21 09:06:34 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_tract_home_value:622 | Census ACS tract home value data already cached.
+2026-03-21 09:06:34 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:662 | Census ACS ZCTA home value data already cached.
+2026-03-21 09:06:34 | DEBUG    | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:700 | ZCTA-tract crosswalk already cached.
+2026-03-21 09:06:34 | INFO     | pipeline.04_osm_amenities:fill_missing_home_values:784 | Home value fallback: filled 2,658 from tract, 0 from ZCTA, 935 still missing
+2026-03-21 09:06:34 | INFO     | pipeline.04_osm_amenities:_add_city_column:84 | Reverse geocoding city names …
+2026-03-21 16:22:07 | SUCCESS  | pipeline.04_osm_amenities:run:1132 | Saved /Users/steph/code/where_to_live/data/processed/north_amenities.parquet
+2026-03-21 16:22:07 | INFO     | pipeline.04_osm_amenities:run:1121 | South: Census ACS home value joined for 3,917/4,969 block groups
+2026-03-21 16:22:07 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_tract_home_value:622 | Census ACS tract home value data already cached.
+2026-03-21 16:22:07 | DEBUG    | pipeline.04_osm_amenities:fetch_acs_zcta_home_value:662 | Census ACS ZCTA home value data already cached.
+2026-03-21 16:22:07 | DEBUG    | pipeline.04_osm_amenities:fetch_zcta_tract_crosswalk:700 | ZCTA-tract crosswalk already cached.
+2026-03-21 16:22:07 | INFO     | pipeline.04_osm_amenities:fill_missing_home_values:784 | Home value fallback: filled 756 from tract, 0 from ZCTA, 296 still missing
+2026-03-21 16:22:07 | INFO     | pipeline.04_osm_amenities:_add_city_column:84 | Reverse geocoding city names …
+2026-03-21 18:35:29 | SUCCESS  | pipeline.04_osm_amenities:run:1132 | Saved /Users/steph/code/where_to_live/data/processed/south_amenities.parquet
+2026-03-21 18:35:29 | SUCCESS  | __main__:run_step:45 | Step 4 complete in 34166.7s
+2026-03-21 18:35:29 | SUCCESS  | __main__:main:76 | Pipeline complete in 569.4 minutes.
+2026-03-21 18:35:29 | INFO     | __main__:main:77 | Outputs: outputs/north_candidates.csv | outputs/south_candidates.csv | outputs/maps/
